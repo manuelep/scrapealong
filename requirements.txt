@@ -1,2 +1,2 @@
-nose
-sphinx
+aiohttp
+bs4

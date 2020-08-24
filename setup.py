@@ -12,14 +12,13 @@ with open('LICENSE') as f:
     license = f.read()
 
 setup(
-    name='sample',
+    name='scrapealong',
     version='0.1.0',
-    description='Sample package for Python-Guide.org',
+    description='Basic async scraping library',
     long_description=readme,
-    author='Kenneth Reitz',
-    author_email='me@kennethreitz.com',
-    url='https://github.com/kennethreitz/samplemod',
+    author='Manuele Pesenti',
+    author_email='manuele@inventati.org',
+    url='https://github.com/manuelep/scrapealong',
     license=license,
     packages=find_packages(exclude=('tests', 'docs'))
 )
-
