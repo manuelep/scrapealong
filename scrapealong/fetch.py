@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 
+from . import settings
+
 import aiohttp
 from bs4 import BeautifulSoup
 import asyncio
@@ -31,3 +33,15 @@ async def fetch(url, retry=3):
                 break
 
     return BeautifulSoup(body, "html.parser")
+
+class SlowFetcher(object):
+    """docstring for SlowFetcher."""
+
+    def __init__(self, QUEUE_LENGTH=settings.QUEUE_LENGTH):
+        super(SlowFetcher, self).__init__()
+        self.semaphoro = asyncio.Semaphore(QUEUE_LENGTH)
+
+    async def fetch(self, url):
+        async with self.semaphoro:
+            response = await fetch(url)
+        return response

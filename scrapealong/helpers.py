@@ -2,6 +2,8 @@
 
 import asyncio
 from diskcache import Cache
+from functools import reduce
+from urllib.parse import urljoin
 
 CACHE_PATH = '/tmp/'
 
@@ -35,3 +37,18 @@ class Loop(object):
     def __exit__(self, exc_type, exc_value, traceback):
         """ """
         # self.loop.close()
+
+myurl = lambda *parts: reduce(lambda x, y: urljoin(x, y), parts)
+
+# class ScraperDecorator(object):
+#     """docstring for ScraperDecorator."""
+#
+#     def __init__(self):
+#         super(ScraperDecorator, self).__init__()
+#
+#     def __call__(self, func):
+#         def wrapper(*args, **kwargs):
+#             response = func(*args, **kwargs)
+#             return self.run(response)
+#
+#         return wrapper
