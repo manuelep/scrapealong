@@ -21,14 +21,15 @@ class Picker(MultiPicker):
         offset = scrape.pagination(response)
         pages = [self.url(self.PAGINATE*ii) for ii in range(1,int(offset)+1)]
 
-        first = [jj for jj in tqdm(scrape.collection(response))]
+        first = [jj for jj in scrape.collection(response)]
         others_ = await asyncio.gather(*[fetcher.fetch(url_) for url_ in pages])
 
-        return chain(first, *map(scrape.collection, others_))
+        return chain(first, *map(scrape.collection, tqdm(others_)))
 
 
 if __name__ == '__main__':
 
+    # from py4web.core import dumps
     # url = myurl(settings.BASE_URL, settings.PATH_PREFIX, settings.TRACKED_LOCATIONS[0])
     picker = Picker(settings.TRACKED_LOCATIONS[0])
     res = picker()

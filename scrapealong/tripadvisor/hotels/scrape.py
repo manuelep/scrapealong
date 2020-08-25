@@ -17,7 +17,7 @@ def collection(response):
 
     infos = []
     for hotel in tqdm(hotels_,total=len(hotels_)):
-        info = {}
+        info = {'amenity': 'hotel'}
 
         info['sid'] = hotel.find("div", {"data-locationid": re.compile(".")})['data-locationid']
 
@@ -33,9 +33,10 @@ def collection(response):
 
         stars__ = hotel.find("a",{"class":re.compile(r'ui_bubble_rating bubble_')})
         if not stars__ is None:
+            info['stars:raw'] = stars__['alt']
             stars_, full_scale = [x[0] for x in re.finditer('[\d]*[.][\d]+|[\d]+', stars__['alt'])]
             stars = Decimal(str(float(stars_)/int(full_scale))).quantize(Decimal(str(1/int(full_scale))))
-            info['stars'] = stars
+            info['stars:norm'] = stars
 
         reviews_ = hotel.find("a",{"class":"review_count"})
         if not reviews_ is None:
