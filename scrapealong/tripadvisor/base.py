@@ -3,7 +3,20 @@
 from .. import settings
 from ..helpers import Loop, myurl
 
-class MultiPicker(object):
+class BasePicker(object):
+    """docstring for BasePicker."""
+
+    def __call__(self, *args, **kwargs):
+        with Loop() as loop:
+            res = loop.run_until_complete(self.run(*args, **kwargs))
+        return res
+
+    async def run(self):
+        """ """
+        raise NotImplementedError()
+
+
+class MultiPicker(BasePicker):
     """docstring for MultiPicker."""
 
     PAGINATE = settings.PAGINATE
@@ -24,12 +37,3 @@ class MultiPicker(object):
             parts.insert(2, self.PAGINATION_PREFIX+format(ii, '02d'))
         path = '-'.join(parts)
         return myurl(settings.BASE_URL, path)
-
-    def __call__(self):
-        with Loop() as loop:
-            res = loop.run_until_complete(self.run())
-        return res
-
-    async def run(self):
-        """ """
-        raise NotImplementedError()

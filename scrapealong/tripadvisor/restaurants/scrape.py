@@ -7,6 +7,7 @@ from decimal import Decimal
 from ..scrape import pagination as pagination_
 
 PRICE_FULL_SCALE = 4
+AMENITY = 'restaurant'
 
 def pagination(response):
     """ """
@@ -20,7 +21,7 @@ def collection(response):
     infos = []
     for restaurant in tqdm(restaurants,total=len(restaurants)):
 
-        info = {'amenity': 'restautant'}
+        info = {'amenity': AMENITY}
 
         info['url'] = restaurant.find("a",{"class":"_15_ydu6b"})['href']
         info['sid'] = re.search('-d[0-9]+-', info['url']).group()[2:-1]
@@ -48,3 +49,20 @@ def collection(response):
         infos.append(info)
 
     return infos
+
+def details(response):
+    info = {'amenity': AMENITY}
+
+    contact_details_ = response.findAll("span",{"class":"_13OzAOXO _2VxaSjVD"})
+
+    info['rank'] = contact_details_[0].text
+
+    info['address'] = contact_details_[1].text
+
+    info['phone'] = contact_details_[2].text
+
+    info['sid'] = response.find("div", {"data-location-id": True})["data-location-id"]
+
+    info['name'] = response.find("h1", {"data-test-target": "top-info-header"}).text
+
+    return info
