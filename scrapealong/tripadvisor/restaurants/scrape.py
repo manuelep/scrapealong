@@ -42,9 +42,13 @@ def collection(response):
                 if len(type_cost)>1:
                     info['price:raw'] = type_cost[1].text
                     info['price:range:norm'] = list(map(
-                        lambda seq: Decimal(str(len(re.findall("\$", seq))/4)).quantize(Decimal(str(1/PRICE_FULL_SCALE))),
+                        lambda seq: Decimal(
+                            str(len(re.findall("\$", seq))/PRICE_FULL_SCALE)
+                        ).quantize(Decimal(str(1/PRICE_FULL_SCALE))),
                         info['price:raw'].split('-')
                     ))
+
+        # TODO: Implement here the calculation of other parameters useful for rating
 
         infos.append(info)
 
@@ -55,7 +59,10 @@ def details(response):
 
     contact_details_ = response.findAll("span",{"class":"_13OzAOXO _2VxaSjVD"})
 
-    info['rank'] = contact_details_[0].text
+    try:
+        info['rank'] = contact_details_[0].text
+    except:
+        import pdb; pdb.set_trace()
 
     info['address'] = contact_details_[1].text
 
@@ -64,5 +71,7 @@ def details(response):
     info['sid'] = response.find("div", {"data-location-id": True})["data-location-id"]
 
     info['name'] = response.find("h1", {"data-test-target": "top-info-header"}).text
+
+    # TODO: Implement here the calculation of other parameters useful for rating
 
     return info

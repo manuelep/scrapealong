@@ -9,16 +9,18 @@ import re
 
 from pyppeteer import launch
 from pyppeteer.errors import ElementHandleError
+from pyppeteer.errors import TimeoutError
 
-TIMEOUT = 25.
-RETRY_WITHIN = 5
+FETCH_TIMEOUT = 25.
+BROWSE_TIMEOUT = 25000
+RETRY_WITHIN = 10
 
 async def fetch(url, retry=3):
     """ Fetches the given url and return the parsed page body
     DOC:
         * https://www.crummy.com/software/BeautifulSoup/bs4/doc/
     """
-    timeout = aiohttp.ClientTimeout(total=TIMEOUT)
+    timeout = aiohttp.ClientTimeout(total=FETCH_TIMEOUT)
 
     async with aiohttp.ClientSession(timeout=timeout) as session:
         for tt in range(retry):
@@ -38,15 +40,27 @@ async def fetch(url, retry=3):
 
     return BeautifulSoup(body, "html.parser")
 
-async def browse(url):
+async def browse(url, retry=3):
 
     info = {}
 
     browser = await launch()
     page = await browser.newPage()
-    res_ = await page.goto(url)
 
-    body = await res_.text()
+    for tt in range(retry):
+        try:
+            res_ = await page.goto(url, timeout=BROWSE_TIMEOUT)
+        except TimeoutError as err:
+            if tt < retry-1:
+                await asyncio.sleep(RETRY_WITHIN)
+                continue
+            else:
+                print(url)
+                raise err
+        else:
+            # body = await res_.text()
+            body = await page.content()
+            break
 
     try:
         span = await page.evaluate('''() => {

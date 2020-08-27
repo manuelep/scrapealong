@@ -4,7 +4,15 @@ import re
 from tqdm import tqdm
 from price_parser import Price
 from decimal import Decimal
-from ..scrape import pagination as pagination_
+
+AMENITY = 'hotel'
+
+def pagination_(pages):
+    """ """
+    offset_=[int(x['data-offset'].strip()) for x in pages if int(x['data-offset'].strip())!=0]
+    # pages_links=[x['href'] for x in pages]
+    total_offset=offset_[-1]/offset_[0]
+    return total_offset
 
 def pagination(response):
     """ """
@@ -17,7 +25,7 @@ def collection(response):
 
     infos = []
     for hotel in tqdm(hotels_,total=len(hotels_)):
-        info = {'amenity': 'hotel'}
+        info = {'amenity': AMENITY}
 
         info['sid'] = hotel.find("div", {"data-locationid": re.compile(".")})['data-locationid']
 
@@ -50,6 +58,36 @@ def collection(response):
         if not link_ is None:
             info['url'] = link_['href']
 
+        # TODO: Implement here the calculation of other parameters useful for rating
+
         infos.append(info)
 
     return infos
+
+import json
+
+def details(response):
+
+    info = {'amenity': AMENITY}
+
+    rank_ = response.find("div",{"class":"_1vpp5J_x"})
+    if not rank_ is None:
+        info['rank:raw'] = response.find("div",{"class":"_1vpp5J_x"}).text
+    #
+    address_ = response.find("span",{"class":"_3ErVArsu jke2_wbp"})
+    if not address_ is None:
+        info['address'] = address_.text
+    #
+    # info['phone'] = response.find("a",{"class":"_1748LPGe"}).text
+    #
+    try:
+        info['sid'] = response.find("div", {"data-locationid": True})["data-locationid"]
+    except:
+        info['sid'] = str(json.loads(response.find("div", {"data-ssrev-handlers": True})["data-ssrev-handlers"])['load'][3]['locationId'])
+
+    #
+    info['name'] = response.find("h1", {"id": "HEADING"}).text
+
+    # TODO: Implement here the calculation of other parameters useful for rating
+
+    return info

@@ -14,8 +14,9 @@ def populate(escape=None, commit=False):
 
 @contextmanager
 def champ(n=100):
+    # WARNING: Do not run this version in parallel tasks.
     try:
-        res = db(db.amenities.amenity=='restaurant').select(
+        res = db(db.amenities.id>0).select(
             orderby = db.amenities.id,
             limitby = (0, n,),
             cacheable = True
