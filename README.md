@@ -4,37 +4,41 @@
 
 1. clone the repository
 
-        ::sh
-        git clone git@github.com:manuelep/scrapealong.git
+    ```sh
+    git clone git@github.com:manuelep/scrapealong.git
+    ```
 
 1. install requirements
 
-        ::sh
-        cd path/to/scrapealong
-        pip install -r requirements.txt
+    ```sh
+    cd path/to/scrapealong
+    pip install -r requirements.txt
+    ```
 
 1. module setup
 
-        ::sh
-        touch scrapealong/settings_private.py
+    ```sh    
+    touch scrapealong/settings_private.py
+    ```
 
     create the `settings_private.py` file as showed before and fill it with the
     subsequent content adapted to your needs:
 
-        ::py
-        # -*- coding: utf-8 -*-
+    ```py
+    # -*- coding: utf-8 -*-
 
-        QUEUE_LENGTH = 2
+    QUEUE_LENGTH = 2
 
-        TRIPADVISOR_HOTES_LOCATIONS = [
-            # Try something like:
-            # 'Hotels-g187849-Milan_Lombardy-Hotels.html',
-        ]
+    TRIPADVISOR_HOTES_LOCATIONS = [
+        # Try something like:
+        # 'Hotels-g187849-Milan_Lombardy-Hotels.html',
+    ]
 
-        TRIPADVISOR_RESTAURANTS_LOCATIONS = [
-            # Try something like:
-            # 'Restaurants-g187849-Milan_Lombardy.html',
-        ]
+    TRIPADVISOR_RESTAURANTS_LOCATIONS = [
+        # Try something like:
+        # 'Restaurants-g187849-Milan_Lombardy.html',
+    ]
+    ```
 
 1. run the tests
 
