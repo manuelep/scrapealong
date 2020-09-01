@@ -19,10 +19,14 @@ class Picker(MultiPicker):
         response = await fetcher.fetch(self.url())
 
         offset = scrape.pagination(response)
-        pages = [self.url(self.PAGINATE*ii) for ii in range(1,int(offset)+1)]
 
         first = [jj for jj in scrape.collection(response)]
-        others_ = await asyncio.gather(*[fetcher.fetch(url_) for url_ in pages])
+
+        if not offset is None:
+            pages = [self.url(self.PAGINATE*ii) for ii in range(1,int(offset)+1)]
+            others_ = await asyncio.gather(*[fetcher.fetch(url_) for url_ in pages])
+        else:
+            others_ = []
 
         return chain(first, *map(scrape.collection, tqdm(others_)))
 

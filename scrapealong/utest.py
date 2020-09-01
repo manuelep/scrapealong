@@ -2,8 +2,9 @@
 
 import unittest
 
-from .populate import loopOdata, extract
+from .populate import loopOdata, extract, populate, db
 from geojson import Feature
+nrecs = 20
 
 class TestScrapeMethods(unittest.TestCase):
 
@@ -14,8 +15,10 @@ class TestScrapeMethods(unittest.TestCase):
 
 class TestExtracetMethods(unittest.TestCase):
 
+    def setUp(self):
+        populate(commit=True)
+
     def test_extract(self):
-        nrecs = 10
         recs = extract(nrecs)
 
         try:
@@ -32,7 +35,7 @@ if __name__ == '__main__':
     #
     # parser.add_argument("-r", "--recs",
     #     help = 'Records to extract for test',
-    #     type=int, default=10,
+    #     default=10,
     # )
     #
     # args = parser.parse_args()

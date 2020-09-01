@@ -4,15 +4,19 @@ import re
 from tqdm import tqdm
 from price_parser import Price
 from decimal import Decimal
+from ..scrape import pagination as pagination_
 
 AMENITY = 'hotel'
 
-def pagination_(pages):
-    """ """
-    offset_=[int(x['data-offset'].strip()) for x in pages if int(x['data-offset'].strip())!=0]
-    # pages_links=[x['href'] for x in pages]
-    total_offset=offset_[-1]/offset_[0]
-    return total_offset
+# def pagination_(pages):
+#     """ """
+#     offset_=[int(x['data-offset'].strip()) for x in pages if int(x['data-offset'].strip())!=0]
+#
+#     try:
+#         total_offset=offset_[-1]/offset_[0]
+#     except IndexError:
+#         import pdb; pdb.set_trace()
+#     return total_offset
 
 def pagination(response):
     """ """
@@ -93,7 +97,6 @@ def details(response, url):
                 break
 
     if not 'sid' in info:
-        import pdb; pdb.set_trace()
         for script in response.find('body').findAll("script"):
             if re.search('locationId', str(script)):
                 if re.search('locationId\"', str(script)):

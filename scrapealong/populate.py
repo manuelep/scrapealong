@@ -76,6 +76,6 @@ def extract(n=500):
                 if not feat is None:
                     yield feat
 
-if __name__ == '__main__':
-    populate()
-    db.commit()
+# if __name__ == '__main__':
+#     populate()
+#     db.commit()
