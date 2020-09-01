@@ -4,14 +4,14 @@
 
 1. clone the repository
 
-    ::sh
-    git clone git@github.com:manuelep/scrapealong.git
+        ::sh
+        git clone git@github.com:manuelep/scrapealong.git
 
 1. install requirements
 
-    ::sh
-    cd path/to/scrapealong
-    pip install -r requirements.txt
+        ::sh
+        cd path/to/scrapealong
+        pip install -r requirements.txt
 
 1. module setup
 
@@ -21,7 +21,7 @@
     create the `settings_private.py` file as showed before and fill it with the
     subsequent content adapted to your needs:
 
-        ::python
+        ::py
         # -*- coding: utf-8 -*-
 
         QUEUE_LENGTH = 2
