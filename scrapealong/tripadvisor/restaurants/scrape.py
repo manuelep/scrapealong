@@ -54,15 +54,12 @@ def collection(response):
 
     return infos
 
-def details(response):
-    info = {'amenity': AMENITY}
+def details(response, url):
+    info = {'amenity': AMENITY, 'link': url}
 
     contact_details_ = response.findAll("span",{"class":"_13OzAOXO _2VxaSjVD"})
 
-    try:
-        info['rank'] = contact_details_[0].text
-    except:
-        import pdb; pdb.set_trace()
+    info['rank'] = contact_details_[0].text
 
     info['address'] = contact_details_[1].text
 

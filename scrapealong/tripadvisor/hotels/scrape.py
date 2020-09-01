@@ -66,9 +66,9 @@ def collection(response):
 
 import json
 
-def details(response):
+def details(response, url):
 
-    info = {'amenity': AMENITY}
+    info = {'amenity': AMENITY, 'link': url}
 
     rank_ = response.find("div",{"class":"_1vpp5J_x"})
     if not rank_ is None:
@@ -80,13 +80,31 @@ def details(response):
     #
     # info['phone'] = response.find("a",{"class":"_1748LPGe"}).text
     #
+
     try:
-        info['sid'] = response.find("div", {"data-locationid": True})["data-locationid"]
+        info['sid'] = response.find('input', {'name': 'locationId'})['value']
     except:
-        info['sid'] = str(json.loads(response.find("div", {"data-ssrev-handlers": True})["data-ssrev-handlers"])['load'][3]['locationId'])
+        for foo in response.findAll("div", {"data-ssrev-handlers": True}):
+            try:
+                info['sid'] = str(json.loads(foo["data-ssrev-handlers"])['load'][3]['locationId'])
+            except:
+                continue
+            else:
+                break
+
+    if not 'sid' in info:
+        import pdb; pdb.set_trace()
+        for script in response.find('body').findAll("script"):
+            if re.search('locationId', str(script)):
+                if re.search('locationId\"', str(script)):
+                    info['sid'] = re.search('locationId\".*?,', str(script)).group()[len('locationId')+2:-1]
+
+    assert 'sid' in info, url
 
     #
-    info['name'] = response.find("h1", {"id": "HEADING"}).text
+    name_ = response.find("h1", {"id": "HEADING"})
+    if not name_ is None:
+        info['name'] = name_.text
 
     # TODO: Implement here the calculation of other parameters useful for rating
 

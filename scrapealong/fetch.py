@@ -10,11 +10,39 @@ import re
 from pyppeteer import launch
 from pyppeteer.errors import ElementHandleError
 from pyppeteer.errors import TimeoutError
+import logging
+from swissknife.timeformat import prettydelta
+import datetime
 
 FETCH_TIMEOUT = 25.
 BROWSE_TIMEOUT = 25000
 RETRY_WITHIN = 10
 
+# create logger
+logger = logging.getLogger(__name__)
+
+
+ch = logging.StreamHandler()
+ch.setLevel(logging.DEBUG)
+
+logger.addHandler(ch)
+
+logger.setLevel(logging.DEBUG)
+
+def timeit(func):
+    async def wrapper(url, *args, **kwargs):
+        assert asyncio.iscoroutinefunction(func)
+        logger.warning(f"Used method: {func.__name__}")
+        logger.warning(f"Calling url: {url}")
+        start = datetime.datetime.now()
+        result = await func(url, *args, **kwargs)
+        end = datetime.datetime.now()
+        elapsed = prettydelta(end-start)
+        logger.warning(elapsed)
+        return result
+    return wrapper
+
+@timeit
 async def fetch(url, retry=3):
     """ Fetches the given url and return the parsed page body
     DOC:
@@ -40,6 +68,7 @@ async def fetch(url, retry=3):
 
     return BeautifulSoup(body, "html.parser")
 
+@timeit
 async def browse(url, retry=3):
 
     info = {}
@@ -78,7 +107,7 @@ async def browse(url, retry=3):
 
     await browser.close()
 
-    return lon_lat, BeautifulSoup(body, "html.parser")
+    return lon_lat, BeautifulSoup(body, "html.parser"), url
 
 class SlowFetcher(object):
     """docstring for SlowFetcher."""

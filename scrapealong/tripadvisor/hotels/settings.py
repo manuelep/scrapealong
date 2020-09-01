@@ -2,13 +2,12 @@
 
 from ...settings import *
 
-TRACKED_LOCATIONS = [
-    # Examples
-    # 'Hotels-g187849-Milan_Lombardy-Hotels.html',
-]
+from ..settings import *
 
-# try import private settings
-try:
-    from .settings_private import *
-except:
-    pass
+TRACKED_LOCATIONS = TRIPADVISOR_HOTES_LOCATIONS
+
+# # try import private settings
+# try:
+#     from .settings_private import *
+# except:
+#     pass

@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from .. import settings
+from .import settings
 from ..helpers import Loop, myurl
 
 class BasePicker(object):
