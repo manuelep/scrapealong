@@ -4,7 +4,6 @@
 
 from setuptools import setup, find_packages
 
-
 with open('README.rst') as f:
     readme = f.read()
 
@@ -14,7 +13,7 @@ with open('LICENSE') as f:
 setup(
     name='scrapealong',
     version='0.1.0',
-    description='Basic async scraping library',
+    description='Async scraping library',
     long_description=readme,
     author='Manuele Pesenti',
     author_email='manuele@inventati.org',

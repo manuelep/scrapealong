@@ -1,3 +1,4 @@
 aiohttp
 bs4
 price-parser
+-e git+git@bitbucket.org:colouree/swissknife.git@py3ready#egg=swissknife

@@ -27,7 +27,7 @@ def populate(escape=None, commit=False):
         db.commit()
 
 @contextmanager
-def champ(n=100):
+def champ(n=100, commit=False):
     # WARNING: Do not run this version in parallel tasks.
     try:
         res = db(db.amenities.id>0).select(
@@ -38,7 +38,8 @@ def champ(n=100):
         yield res.group_by_value(db.amenities.amenity)
     finally:
         db(db.amenities.id.belongs(map(lambda row: row.id, res))).delete()
-        db.commit()
+        if commit:
+            db.commit()
 
 def get_feature_(row, updates_):
     lon_lat, updates = updates_
@@ -57,9 +58,9 @@ def get_feature_(row, updates_):
             properties = dict(row.properties, **updates)
         )
 
-def extract(n=500):
+def extract(n=500, commit=False):
     """ """
-    with champ(n) as grouped:
+    with champ(n, commit=commit) as grouped:
         for amenity, res in grouped.items():
             if amenity=='restaurant':
                 picker = ResPicker()

@@ -29,15 +29,4 @@ class TestExtracetMethods(unittest.TestCase):
         self.assertTrue(isinstance(feat, Feature))
 
 if __name__ == '__main__':
-    # import argparse
-    #
-    # parser = argparse.ArgumentParser(description='Test some methods.')
-    #
-    # parser.add_argument("-r", "--recs",
-    #     help = 'Records to extract for test',
-    #     default=10,
-    # )
-    #
-    # args = parser.parse_args()
-
     unittest.main()
