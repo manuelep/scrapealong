@@ -8,6 +8,11 @@ from contextlib import contextmanager
 from .tripadvisor.restaurants.single import Picker as ResPicker
 from .tripadvisor.hotels.single import Picker as HotPicker
 
+from .tripadvisor.restaurants.scrape import details as res_details
+from .tripadvisor.hotels.scrape import details as hot_details
+
+from .fetch import parser
+
 from geojson import Feature, Point
 from tqdm import tqdm
 
@@ -17,32 +22,14 @@ def loopOdata(escape=None):
             if db.amenities(sid=amenity['sid']) is None:
                 yield amenity
 
-def populate(escape=None, commit=False):
+def populate(escape=None):
     for amenity in loopOdata(escape=escape):
         db.amenities.insert(
             source_name = tripadvisor,
             properties = amenity
         )
-    if commit:
-        db.commit()
 
-@contextmanager
-def champ(n=100, commit=False):
-    # WARNING: Do not run this version in parallel tasks.
-    try:
-        res = db(db.amenities.id>0).select(
-            orderby = db.amenities.id,
-            limitby = (0, n,),
-            cacheable = True
-        )
-        yield res.group_by_value(db.amenities.amenity)
-    finally:
-        db(db.amenities.id.belongs(map(lambda row: row.id, res))).delete()
-        if commit:
-            db.commit()
-
-def get_feature_(row, updates_):
-    lon_lat, updates = updates_
+def get_feature_(row, updates, lon_lat):
 
     assert row['sid']==updates['sid'], f"{row.sid} != {updates['sid']}"
 
@@ -58,25 +45,95 @@ def get_feature_(row, updates_):
             properties = dict(row.properties, **updates)
         )
 
-def extract(n=500, commit=False):
+def champ(n=100):
+    # WARNING: Do not run this version in parallel tasks.
+    pages_ = db(db.pages.id>0)._select(db.pages.amenities_id)
+    res = db(~db.amenities.id.belongs(pages_)).select(
+        orderby = db.amenities.id,
+        limitby = (0, n,) if not n is None else None,
+        cacheable = True
+    )
+    return res.group_by_value(db.amenities.amenity)
+
+def fetch(n=500):
     """ """
-    with champ(n, commit=commit) as grouped:
-        for amenity, res in grouped.items():
-            if amenity=='restaurant':
-                picker = ResPicker()
-            elif amenity=='hotel':
-                picker = HotPicker()
-            else:
-                raise NotImplementedError
+    for amenity, res in champ(n).items():
+        if amenity=='restaurant':
+            picker = ResPicker()
+        elif amenity=='hotel':
+            picker = HotPicker()
+        else:
+            raise NotImplementedError
 
-            for row,updates_ in tqdm(zip(
-                res,
-                picker(map(lambda r: r.url, res))
-            ), total=len(res)):
-                feat = get_feature_(row, updates_)
-                if not feat is None:
-                    yield feat
+        for row,updates_ in tqdm(zip(
+            res,
+            picker(map(lambda r: r.url, res))
+        ), total=len(res)):
+            lon_lat, updates, body = updates_
+            feat = get_feature_(row, updates, lon_lat)
 
-# if __name__ == '__main__':
-#     populate()
-#     db.commit()
+            db.pages.insert(
+                amenities_id = row.id,
+                page = body
+            )
+
+            if not feat is None:
+                yield feat
+
+# def page2properties(updates):
+#     lon, lat = lon_lat
+#     point = Point((lon, lat))
+#     return Feature(
+#         id = updates['sid'],
+#         geometry = point,
+#         properties = dict(updates)
+#     )
+
+def extract(n=None):
+    """ """
+    res = db(db.pages.amenities_id==db.amenities.id).select(
+        db.pages.page.with_alias('page'),
+        db.amenities.amenity,
+        db.amenities.url.with_alias('url'),
+        # orderby = db.pages.id,
+        limitby = (0, n,) if not n is None else None,
+        cacheable = True
+    )
+    for amenity, res in res.group_by_value(db.amenities.amenity).items():
+        if amenity=='restaurant':
+            details = res_details
+        elif amenity=='hotel':
+            details = hot_details
+        else:
+            raise NotImplementedError
+
+        for row in res:
+            updates = details(parser(row.page), row.url)
+            yield updates
+
+def extract2():
+    res = db(db.pages.amenities_id==db.amenities.id).select(
+        db.pages.page.with_alias('page'),
+        db.amenities.amenity.with_alias('amenity'),
+        db.amenities.url.with_alias('url'),
+        # orderby = db.pages.id,
+        # limitby = (0, n,) if not n is None else None,
+        # cacheable = True
+    )
+
+    for row in res:
+        if row.amenity=='restaurant':
+            details = res_details
+        elif row.amenity=='hotel':
+            details = hot_details
+        else:
+            raise NotImplementedError
+        updates = details(parser(row.page), row.url)
+        yield updates
+
+
+if __name__ == '__main__':
+    # feats = list(extract())
+
+    feats = list(fetch(None))
+    db.commit()

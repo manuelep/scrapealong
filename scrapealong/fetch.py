@@ -42,6 +42,8 @@ def timeit(func):
         return result
     return wrapper
 
+parser = lambda body: BeautifulSoup(body, "html.parser")
+
 @timeit
 async def fetch(url, retry=3):
     """ Fetches the given url and return the parsed page body
@@ -66,7 +68,7 @@ async def fetch(url, retry=3):
                     return
                 break
 
-    return BeautifulSoup(body, "html.parser")
+    return parser(body)
 
 @timeit
 async def browse(url, retry=3):
@@ -107,7 +109,7 @@ async def browse(url, retry=3):
 
     await browser.close()
 
-    return lon_lat, BeautifulSoup(body, "html.parser"), url
+    return lon_lat, parser(body), url,
 
 class SlowFetcher(object):
     """docstring for SlowFetcher."""

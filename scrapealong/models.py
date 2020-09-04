@@ -4,6 +4,7 @@ from .common import db
 from . import settings
 
 from urllib.parse import urljoin
+from hashlib import blake2s
 from pydal import Field
 
 db.define_table("amenities",
@@ -20,4 +21,17 @@ db.define_table("amenities",
         )
     ),
     Field("properties", "json", required=True, notnull=True)
+)
+
+db.define_table("pages",
+    Field("amenities_id", "reference amenities", required=True, notnull=True,
+        # WARNING: Actually it's a one to one relationship
+        unique = True
+    ),
+    # NOTE: Eventually we can think to store a compressed version
+    Field("page", "text", required=True, notnull=True),
+    Field("checksum", notnull=True, unique=True,
+        compute = lambda row: blake2s(row['page'].encode('utf-8')).hexdigest()
+    )
+    # Field("info", "json")
 )

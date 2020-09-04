@@ -2,7 +2,7 @@
 
 import unittest
 
-from .populate import loopOdata, extract, populate, db
+from .populate import loopOdata, fetch, populate, db
 from geojson import Feature
 nrecs = 20
 
@@ -16,15 +16,19 @@ class TestScrapeMethods(unittest.TestCase):
 class TestExtracetMethods(unittest.TestCase):
 
     def setUp(self):
-        populate(commit=True)
+        populate()
+        # db.commit()
 
-    def test_extract(self):
-        recs = extract(nrecs)
+    def test_fetch(self):
+        recs = fetch(nrecs)
 
         try:
             feat = next(recs)
         except StopIteration:
             self.fail("Please increase the test 'nrecs' parameter!")
+        else:
+            db.commit()
+
 
         self.assertTrue(isinstance(feat, Feature))
 

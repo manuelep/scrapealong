@@ -76,11 +76,13 @@ def details(response, url):
 
     rank_ = response.find("div",{"class":"_1vpp5J_x"})
     if not rank_ is None:
-        info['rank:raw'] = response.find("div",{"class":"_1vpp5J_x"}).text
+        rank_ = response.find("div",{"class":"_1vpp5J_x"}).text.strip()
+        rank = ' '.join(filter(None, re.split(' |\n',rank_)))
+        info['rank:raw'] = rank
     #
     address_ = response.find("span",{"class":"_3ErVArsu jke2_wbp"})
     if not address_ is None:
-        info['address'] = address_.text
+        info['address'] = address_.text.strip()
     #
     # info['phone'] = response.find("a",{"class":"_1748LPGe"}).text
     #
@@ -107,7 +109,7 @@ def details(response, url):
     #
     name_ = response.find("h1", {"id": "HEADING"})
     if not name_ is None:
-        info['name'] = name_.text
+        info['name'] = name_.text.strip()
 
     # TODO: Implement here the calculation of other parameters useful for rating
 
