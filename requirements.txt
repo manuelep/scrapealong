@@ -2,4 +2,5 @@ aiohttp
 bs4
 price-parser
 pyppeteer
+diskcache
 -e git+git@bitbucket.org:colouree/swissknife.git@py3ready#egg=swissknife
