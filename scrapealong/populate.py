@@ -22,12 +22,17 @@ def loopOdata(escape=None):
             if db.amenities(sid=amenity['sid']) is None:
                 yield amenity
 
-def populate(escape=None):
+def populate(escape=None, commit=False):
+    """ Populates the local temporary database with raw informtions from summary
+    pages.
+    """
     for amenity in loopOdata(escape=escape):
         db.amenities.insert(
             source_name = tripadvisor,
             properties = amenity
         )
+    if commit:
+        db.commit()
 
 def get_feature_(row, updates, lon_lat):
 
@@ -55,8 +60,10 @@ def champ(n=100):
     )
     return res.group_by_value(db.amenities.amenity)
 
-def fetch(n=500):
-    """ """
+def fetch(n=500, commit=False):
+    """ Fetches amenities pages, caches html in local db and yields the geojson
+    feature representing the amenity.
+    """
     for amenity, res in champ(n).items():
         if amenity=='restaurant':
             picker = ResPicker()
@@ -68,7 +75,7 @@ def fetch(n=500):
         for row,updates_ in tqdm(zip(
             res,
             picker(map(lambda r: r.url, res))
-        ), total=len(res)):
+        ), total=len(res), desc='Fetching details'):
             lon_lat, updates, body = updates_
             feat = get_feature_(row, updates, lon_lat)
 
@@ -79,6 +86,8 @@ def fetch(n=500):
 
             if not feat is None:
                 yield feat
+    if commit:
+        db.commit()
 
 # def page2properties(updates):
 #     lon, lat = lon_lat
@@ -133,7 +142,20 @@ def extract2():
 
 
 if __name__ == '__main__':
+
+    # import argparse
+    #
+    # parser = argparse.ArgumentParser(description='Populate the local temporary database')
+    #
+    # parser.add_argument('-c', '--champ', help='')
+    #
+    # args = parser.parse_args()
+
+
+    populate()
+
+
     # feats = list(extract())
 
-    feats = list(fetch(None))
-    db.commit()
+    # feats = list(fetch(None))
+    # db.commit()
