@@ -6,8 +6,11 @@ from . import settings
 from urllib.parse import urljoin
 from hashlib import blake2s
 from pydal import Field
+import datetime
 
-db.define_table("amenities",
+now = lambda : datetime.datetime.utcnow()
+
+db.define_table("amenity",
     Field("sid", label="source id", unique=True, notnull=True,
         compute = lambda row: row['properties']['sid']
     ),
@@ -20,11 +23,22 @@ db.define_table("amenities",
             settings.BASE_URLS_BY_SOURCE[row['source_name']], row['properties']['url']
         )
     ),
-    Field("properties", "json", required=True, notnull=True)
+    Field("properties", "json", required=True, notnull=True),
+    Field("status_code", "integer", length=3, label="Response status code"),
+    Field('created_on', 'datetime',
+        default = now,
+        writable=False, readable=False,
+        # label = T('Created On')
+    ),
+    Field('modified_on', 'datetime',
+        update=now, default=now,
+        writable=False, readable=False,
+        # label=T('Modified On')
+    )
 )
 
-db.define_table("pages",
-    Field("amenities_id", "reference amenities", required=True, notnull=True,
+db.define_table("page",
+    Field("amenity_id", "reference amenity", required=True, notnull=True,
         # WARNING: Actually it's a one to one relationship
         unique = True
     ),
@@ -32,6 +46,25 @@ db.define_table("pages",
     Field("page", "text", required=True, notnull=True),
     Field("checksum", notnull=True, unique=True,
         compute = lambda row: blake2s(row['page'].encode('utf-8')).hexdigest()
+    ),
+    Field('created_on', 'datetime',
+        default = now,
+        writable=False, readable=False,
+        # label = T('Created On')
+    ),
+    Field('modified_on', 'datetime',
+        update=now, default=now,
+        writable=False, readable=False,
+        # label=T('Modified On')
     )
-    # Field("info", "json")
+)
+
+db.define_table("log",
+    Field("page_id", "reference page", required=True, notnull=True),
+    Field("message", "text", required=True, notnull=True),
+    Field('created_on', 'datetime',
+        default = now,
+        writable=False, readable=False,
+        # label = T('Created On')
+    )
 )

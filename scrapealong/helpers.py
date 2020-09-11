@@ -9,6 +9,18 @@ import json
 import numbers, datetime, types
 from enum import Enum
 from decimal import Decimal
+import itertools
+
+class Accumulator(dict):
+    """docstring for Info."""
+
+    def __setitem__(self, key, value):
+        if not key in self:
+            self.__setattr__(key, itertools.count(start=1))
+            dict.__setitem__(self, key, value)
+        else:
+            counter = next(getattr(self, key))
+            dict.__setitem__(self, f"{key}:{counter}", value)
 
 def objectify(obj):
     """ Courtesy of: https://github.com/web2py/py4web/blob/master/py4web/core.py#L222

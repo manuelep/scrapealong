@@ -1,20 +1,10 @@
 # -*- coding: utf-8 -*-
 
 from .import settings
-from ..helpers import Loop, myurl
-
-class BasePicker(object):
-    """docstring for BasePicker."""
-
-    def __call__(self, *args, **kwargs):
-        with Loop() as loop:
-            res = loop.run_until_complete(self.run(*args, **kwargs))
-        return res
-
-    async def run(self):
-        """ """
-        raise NotImplementedError()
-
+from ..helpers import myurl
+from ..base import BasePicker, BaseBrowser
+from pyppeteer.element_handle import ElementHandleError
+import re
 
 class MultiPicker(BasePicker):
     """docstring for MultiPicker."""
@@ -31,9 +21,34 @@ class MultiPicker(BasePicker):
         parts = path.split('-')
         return parts[0], parts[1], '-'.join(parts[2:])
 
-    def url(self, ii=None):
+    def url(self, page=None):
         parts = [self.prefix, self.code, self.suffix]
-        if not ii is None:
-            parts.insert(2, self.PAGINATION_PREFIX+format(ii, '02d'))
+        if not page is None:
+            parts.insert(2, self.PAGINATION_PREFIX+format(page, '02d'))
         path = '-'.join(parts)
         return myurl(settings.BASE_URL, path)
+
+
+class Browser(BaseBrowser):
+    """docstring for Browser."""
+
+    __call__ = BaseBrowser._browse
+
+    async def _page_callback(self, page):
+        """  """
+        try:
+            # This code get longitude and latitude information for *tripadvisor* pages only
+            span = await page.evaluate('''() => {
+                var elem = document.querySelector('[data-test-target="staticMapSnapshot"]');
+                return elem.outerHTML
+            }''')
+        except ElementHandleError:
+            lon_lat = None
+        else:
+            center_ = re.search(';center=.*?\&', span)
+            if not center_ is None:
+                lon_lat = list(map(float, center_.group()[8:-1].split(',')))[::-1]
+            else:
+                lon_lat = None
+
+        self.lon_lat = lon_lat

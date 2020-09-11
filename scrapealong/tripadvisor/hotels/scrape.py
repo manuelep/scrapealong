@@ -1,10 +1,14 @@
 # -*- coding: utf-8 -*-
 
+import json
 import re
 from tqdm import tqdm
 from price_parser import Price
 from decimal import Decimal
-from ..scrape import pagination as pagination_
+import traceback
+from ... common import logger
+from ... helpers import Accumulator
+from ..scrape import pagination as pagination
 
 AMENITY = 'hotel'
 
@@ -68,49 +72,92 @@ def collection(response):
 
     return infos
 
-import json
+def details(response):
 
-def details(response, url):
+    info = Accumulator()
+    warnings = []
 
-    info = {'amenity': AMENITY, 'link': url}
-
-    rank_ = response.find("div",{"class":"_1vpp5J_x"})
-    if not rank_ is None:
-        rank_ = response.find("div",{"class":"_1vpp5J_x"}).text.strip()
-        rank = ' '.join(filter(None, re.split(' |\n',rank_)))
-        info['rank:raw'] = rank
-    #
-    address_ = response.find("span",{"class":"_3ErVArsu jke2_wbp"})
-    if not address_ is None:
-        info['address'] = address_.text.strip()
-    #
-    # info['phone'] = response.find("a",{"class":"_1748LPGe"}).text
-    #
+    sid_errors, sid_tbs = [], []
 
     try:
-        info['sid'] = response.find('input', {'name': 'locationId'})['value']
-    except:
+        sid = response.find('input', {'name': 'locationId'})['value']
+    except Exception as err:
+        sid_errors.append(err)
+        sid_tbs.append(traceback.format_exc())
+    else:
+        info['sid'] = sid
+
+    if sid_errors:
         for foo in response.findAll("div", {"data-ssrev-handlers": True}):
             try:
-                info['sid'] = str(json.loads(foo["data-ssrev-handlers"])['load'][3]['locationId'])
-            except:
+                sid = str(json.loads(foo["data-ssrev-handlers"])['load'][3]['locationId'])
+            except Exception as err:
+                sid_errors.append(err)
+                sid_tbs.append(traceback.format_exc())
                 continue
             else:
+                sid_errors, sid_tbs = [], []
                 break
 
-    if not 'sid' in info:
+    if sid_errors:
+
         for script in response.find('body').findAll("script"):
             if re.search('locationId', str(script)):
                 if re.search('locationId\"', str(script)):
-                    info['sid'] = re.search('locationId\".*?,', str(script)).group()[len('locationId')+2:-1]
+                    sid = re.search('locationId\".*?,', str(script)).group()[len('locationId')+2:-1]
+                    break
 
-    assert 'sid' in info, url
+    try:
+        info['sid'] = sid
+    except NameError as err:
+        sid = None
+        sid_errors.append(err)
+        sid_tbs.append(traceback.format_exc())
+    else:
+        sid_errors, sid_tbs = [], []
 
-    #
+    for err in sid_errors:
+        logger.error(err)
+
+    for tb in sid_tbs:
+        warnings.append(tb)
+
+    rank_ = response.find("div",{"class":"_1vpp5J_x"})
+    try:
+        rank_ = response.find("div",{"class":"_1vpp5J_x"}).text.strip()
+        rank = ' '.join(filter(None, re.split(' |\n',rank_)))
+    except Exception as err:
+        warnings.append(traceback.format_exc())
+        logger.warning(err)
+    else:
+        info['rank:raw'] = rank
+
+    address_ = response.find("span",{"class":"_3ErVArsu jke2_wbp"})
+    try:
+        address = address_.text.strip()
+    except Exception as err:
+        warnings.append(traceback.format_exc())
+        logger.warning(err)
+    else:
+        info['address'] = address
+
+    try:
+        phone = response.find("a",{"class":"_1748LPGe"}).text
+    except Exception as err:
+        warnings.append(traceback.format_exc())
+        logger.warning(err)
+    else:
+        info['phone'] = phone
+
     name_ = response.find("h1", {"id": "HEADING"})
-    if not name_ is None:
-        info['name'] = name_.text.strip()
+    try:
+        name = name_.text.strip()
+    except Exception as err:
+        warnings.append(traceback.format_exc())
+        logger.warning(err)
+    else:
+        info['name'] = name
 
     # TODO: Implement here the calculation of other parameters useful for rating
 
-    return info
+    return sid, info, warnings

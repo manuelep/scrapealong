@@ -32,13 +32,13 @@ logger.setLevel(logging.DEBUG)
 def timeit(func):
     async def wrapper(url, *args, **kwargs):
         assert asyncio.iscoroutinefunction(func)
-        logger.warning(f"Used method: {func.__name__}")
-        logger.warning(f"Calling url: {url}")
+        logger.info(f"Used method: {func.__name__}")
+        logger.info(f"Calling url: {url}")
         start = datetime.datetime.now()
         result = await func(url, *args, **kwargs)
         end = datetime.datetime.now()
         elapsed = prettydelta(end-start)
-        logger.warning(elapsed)
+        logger.info(elapsed)
         return result
     return wrapper
 
@@ -72,6 +72,7 @@ async def fetch(url, retry=3):
 
 @timeit
 async def browse(url, retry=3):
+    """ DEPRECATED BUT STILL IN USE """
 
     info = {}
 
@@ -86,7 +87,6 @@ async def browse(url, retry=3):
                 await asyncio.sleep(RETRY_WITHIN)
                 continue
             else:
-                print(url)
                 raise err
         else:
             # body = await res_.text()
@@ -94,6 +94,7 @@ async def browse(url, retry=3):
             break
 
     try:
+        # This code get longitude and latitude information for *tripadvisor* pages only
         span = await page.evaluate('''() => {
             var elem = document.querySelector('[data-test-target="staticMapSnapshot"]');
             return elem.outerHTML

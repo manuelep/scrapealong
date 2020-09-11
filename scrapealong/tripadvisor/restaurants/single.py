@@ -2,7 +2,8 @@
 
 from ...fetch import SlowFetcher
 from . import scrape
-from ..base import BasePicker
+from ...base import BasePicker
+from ..base import Browser as Browser_
 
 import asyncio
 from tqdm import tqdm
@@ -15,3 +16,8 @@ class Picker(BasePicker):
         geo_and_props = await asyncio.gather(*[fetcher.browse(url) for url in tqdm(urls)])
 
         return map(lambda args: (args[0], scrape.details(*args[1:]), args[1],), geo_and_props)
+
+class Browser(Browser_):
+
+    def _load(self):
+        self.sid, self.details, self.warnings = scrape.details(self.body)

@@ -4,7 +4,10 @@ import re
 from tqdm import tqdm
 from price_parser import Price
 from decimal import Decimal
+import traceback
+from ... helpers import Accumulator
 from ..scrape import pagination as pagination_
+from ... common import logger
 
 PRICE_FULL_SCALE = 4
 AMENITY = 'restaurant'
@@ -54,21 +57,27 @@ def collection(response):
 
     return infos
 
-def details(response, url):
-    info = {'amenity': AMENITY, 'link': url}
+def details(response):
 
-    contact_details_ = response.findAll("span",{"class":"_13OzAOXO _2VxaSjVD"})
+    info = Accumulator()
+    warnings = []
 
-    info['rank'] = contact_details_[0].text
+    try:
+        sid = response.find("div", {"data-location-id": True})["data-location-id"]
+    except Exception as err:
+        sid_errors.append(err)
+        sid_tbs.append(traceback.format_exc())
+    else:
+        info['sid'] = sid
 
-    info['address'] = contact_details_[1].text
-
-    info['phone'] = contact_details_[2].text
-
-    info['sid'] = response.find("div", {"data-location-id": True})["data-location-id"]
-
-    info['name'] = response.find("h1", {"data-test-target": "top-info-header"}).text
+    try:
+        name = response.find("h1", {"data-test-target": "top-info-header"}).text
+    except Exception as err:
+        sid_errors.append(err)
+        sid_tbs.append(traceback.format_exc())
+    else:
+        info['name'] = name
 
     # TODO: Implement here the calculation of other parameters useful for rating
 
-    return info
+    return sid, info, warnings,

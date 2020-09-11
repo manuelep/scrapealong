@@ -4,4 +4,4 @@ from ..settings import *
 
 SOURCE_NAME = 'tripadvisor'
 
-BASE_URL = BASE_URLS_BY_SOURCE[SOURCE_NAME]
+BASE_URL = 'https://www.tripadvisor.com'

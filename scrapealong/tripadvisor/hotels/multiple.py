@@ -1,11 +1,11 @@
 # -*- coding: utf-8 -*-
 
 from ...fetch import fetch, SlowFetcher
-from . import scrape
-from . import settings
 from ..base import MultiPicker
+from . import scrape
+
 from itertools import chain
-from concurrent.futures._base import TimeoutError
+# from concurrent.futures._base import TimeoutError
 import asyncio
 from tqdm import tqdm
 
@@ -32,6 +32,8 @@ class Picker(MultiPicker):
 
 
 if __name__ == '__main__':
+
+    from . import settings
 
     # from py4web.core import dumps
     # url = myurl(settings.BASE_URL, settings.PATH_PREFIX, settings.TRACKED_LOCATIONS[0])

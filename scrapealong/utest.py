@@ -4,7 +4,7 @@ import unittest
 
 from .populate import loopOdata, fetch, populate, db
 from geojson import Feature
-nrecs = 20
+nrecs = 50
 
 class TestScrapeMethods(unittest.TestCase):
 

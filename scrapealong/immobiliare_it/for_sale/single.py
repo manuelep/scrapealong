@@ -2,7 +2,7 @@
 
 from ...fetch import SlowFetcher
 from . import scrape
-from ..base import BasePicker
+from ...base import BasePicker
 from ..base import Browser as Browser_
 
 import asyncio
@@ -13,11 +13,11 @@ class Picker(BasePicker):
 
     async def run(self, urls):
         fetcher = SlowFetcher()
-        geo_and_props = await asyncio.gather(*[fetcher.browse(url) for url in tqdm(urls)])
-
-        return map(lambda args: (args[0], scrape.details(*args[1:]), args[1],), geo_and_props)
+        resps = await asyncio.gather(*[fetcher.fetch(url) for url in tqdm(urls)])
+        return map(scrape.property, resps)
 
 class Browser(Browser_):
+    """docstring for Browser."""
 
     def _load(self):
-        self.sid, self.details, self.warnings = scrape.details(self.body)
+        self.sid, self.lon_lat, self.details, self.warnings = scrape.details(self.body)
