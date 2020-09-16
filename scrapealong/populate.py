@@ -162,7 +162,8 @@ def fetchall(champ=500, commit=False):
     for pag in range(0, (noa//champ+1)*champ, champ):
 
         res = baseset.select(
-            orderby = db.amenity.id,
+            # WARNING: Sorting order here is important for later grouping!
+            orderby = (db.amenity.source_name, db.amenity.id,),
             limitby = (0, champ,)
         )
 
@@ -198,13 +199,14 @@ def fetchall(champ=500, commit=False):
                     yield Feature(
                         id = amenity['sid'],
                         geometry = point,
-                        properties = dict(amenity.properties, **upd.details)
+                        properties = dict(amenity.properties, **upd.details),
+                        source = amenity.source_name
                     )
 
             pbar.update(1)
 
-    if commit:
-        db.commit()
+        if commit:
+            db.commit()
 
 # def extract(n=None):
 #     """ DEPRECATED """
@@ -260,7 +262,7 @@ def extract2():
             raise NotImplementedError
 
         updates = details(parser(row.page), row.url)
-        yield updates
+        yield updates, row.source_name,
 
 
 if __name__ == '__main__':

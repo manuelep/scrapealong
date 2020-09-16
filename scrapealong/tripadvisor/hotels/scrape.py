@@ -12,15 +12,11 @@ from ..scrape import pagination as pagination
 
 AMENITY = 'hotel'
 
-# def pagination_(pages):
-#     """ """
-#     offset_=[int(x['data-offset'].strip()) for x in pages if int(x['data-offset'].strip())!=0]
-#
-#     try:
-#         total_offset=offset_[-1]/offset_[0]
-#     except IndexError:
-#         import pdb; pdb.set_trace()
-#     return total_offset
+def pagination_(pages):
+    """ """
+    offset_=[int(x['data-offset'].strip()) for x in pages if int(x['data-offset'].strip())!=0]
+    total_offset=offset_[-1]/offset_[0]
+    return total_offset
 
 def pagination(response):
     """ """
