@@ -237,6 +237,8 @@ def details(response):
         surface_ = re.search("^[0-9]+", info['surface']).group(0)
     except Exception as err:
         warnings.append(traceback.format_exc())
+        logger.critical('Exception raised while getting the surface value')
+        logger.critical(err)
     else:
         if surface_:
             info['surface:m²'] = int(surface_)
@@ -246,6 +248,8 @@ def details(response):
         cost_ = price_container.text
     except Exception as err:
         warnings.append(traceback.format_exc())
+        logger.critical('Exception raised while getting the price value')
+        logger.critical(err)
     else:
         price = Price.fromstring(cost_)
         info['price:{}'.format(price.currency)] = price.amount

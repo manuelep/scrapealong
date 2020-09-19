@@ -151,26 +151,27 @@ def fetchall(champ=500, commit=False):
 
     pages_ = db(db.page.id>0)._select(db.page.amenity_id)
     baseset = db(
-        ~db.amenity.id.belongs(pages_) # & \
+        db.amenity.id > 0
+        # ~db.amenity.id.belongs(pages_) # & \
         # (db.amenity.source_name==settings.immobiliareit)
     )
     noa = baseset.count()
 
     if champ is None:
         champ = noa
-    pbar = tqdm(total=noa)
-    for pag in range(0, (noa//champ+1)*champ, champ):
+    pbar = tqdm(total=noa, desc='Looping on total pages', nrows=2)
+    for start in range(0, (noa//champ+1)*champ, champ):
 
         res = baseset.select(
             # WARNING: Sorting order here is important for later grouping!
             orderby = (db.amenity.source_name, db.amenity.id,),
-            limitby = (0, champ,)
+            limitby = (start, start+champ-1,)
         )
 
         with Loop() as loop:
             all_updates = loop.run_until_complete(fetchall_(res))
 
-        for upd,amenity in zip(all_updates, res):
+        for upd,amenity in tqdm(zip(all_updates, res), desc='Looping on chanp of features', total=len(res)):
 
             amenity.update_record(status_code = upd.status)
 
@@ -183,6 +184,7 @@ def fetchall(champ=500, commit=False):
                         page = upd._body
                     )
                 else:
+                    page_id = page.id
                     checksum = db.page.checksum.compute(dict(page=upd._body))
                     if checksum!=page.checksum:
                         page.update_record(page = upd._body)

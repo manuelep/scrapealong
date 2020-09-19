@@ -8,6 +8,7 @@ import aiohttp
 from pyppeteer import launch
 import pyppeteer.errors
 from bs4 import BeautifulSoup
+import traceback
 
 FETCH_TIMEOUT = 25.
 BROWSE_TIMEOUT = 25000
@@ -97,9 +98,9 @@ class BaseBrowser(object):
         async with browse_semaphoro:
 
             for tt in range(1, retry+1):
-                browser = await launch()
-                page = await browser.newPage()
                 try:
+                    browser = await launch()
+                    page = await browser.newPage()
                     response = await page.goto(self.url, timeout=BROWSE_TIMEOUT)
                 except pyppeteer.errors.TimeoutError as err:
                     if tt < retry:
@@ -107,27 +108,30 @@ class BaseBrowser(object):
                         logger.info(f"Attempt {tt} failed. Fetch will be retryed within {RETRY_WITHIN} sec")
                         logger.info(self.url)
                         await asyncio.sleep(RETRY_WITHIN)
+                        await page.close()
+                        await browser.close()
                         continue
                     else:
                         logger.warning(f"Attempt {tt} failed")
                         logger.error(err)
+                        await page.close()
+                        await browser.close()
                         raise
+                except pyppeteer.errors.BrowserError as err:
+                    logger.critical(err)
+                    logger.error(traceback.format_exc())
+                    continue
                 else:
                     self.status = response.status
                     if response.status>=400:
                         return
                     else:
                         await self._page_callback(page)
-
+                    self._body = await page.content()
+                    await page.close()
+                    await browser.close()
+                    self._load()
                     break
-                await page.close()
-                await browser.close()
-
-            # body = await res_.text()
-            body = await page.content()
-
-        self._body = body
-        self._load()
 
     @property
     def body(self):
