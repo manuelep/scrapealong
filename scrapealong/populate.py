@@ -151,7 +151,7 @@ def fetchall(champ=500, commit=False):
 
     pages_ = db(db.page.id>0)._select(db.page.amenity_id)
     baseset = db(
-        db.amenity.id > 0
+        (db.amenity.id > 0)
         # ~db.amenity.id.belongs(pages_) # & \
         # (db.amenity.source_name==settings.immobiliareit)
     )
@@ -171,7 +171,7 @@ def fetchall(champ=500, commit=False):
         with Loop() as loop:
             all_updates = loop.run_until_complete(fetchall_(res))
 
-        for upd,amenity in tqdm(zip(all_updates, res), desc='Looping on chanp of features', total=len(res)):
+        for upd,amenity in tqdm(zip(all_updates, res), desc='Looping on a chunk of features', total=len(res)):
 
             amenity.update_record(status_code = upd.status)
 
