@@ -7,6 +7,7 @@ import urllib
 from price_parser import Price
 import re, itertools
 import traceback
+from json import loads
 
 AMENITY = "FOR SALE"
 
@@ -138,7 +139,7 @@ def properties(resp):
                 'sid': sid
             }
 
-def clean (string):
+def clean(string):
         try:
             string=str(string)
             string=re.sub(' +', ' ', string)
@@ -146,7 +147,7 @@ def clean (string):
             string=string.strip()
             return string
         except:
-            return string
+            return string.strip()
 
 def _loopOdefinitions(section):
     """ """
@@ -155,68 +156,135 @@ def _loopOdefinitions(section):
         section.findAll("dd",{"class":re.compile(r'col-xs-12')})
     )
 
+def priceformat(cost):
+    price = Price.fromstring(cost)
+    return 'price:{}'.format(price.currency), price.amount
+
+class Exceptions(object):
+    """docstring for Exceptions."""
+
+    def __init__(self):
+        super(Exceptions, self).__init__()
+        self.__errors = {}
+        self.__tracebacks = {}
+
+    def __setitem__(self, key, err):
+        if key in self.__errors:
+            self.__errors[key].append(err)
+            self.__tracebacks[key].append(traceback.format_exc())
+        else:
+            self.__errors[key] = [err]
+            self.__tracebacks[key] = [traceback.format_exc()]
+
+    def __contains__(self, key):
+        return (key in self.__errors)
+
+    def clean(self, key):
+        if key in self:
+            del self.__errors[key]
+            del self.__tracebacks[key]
+
+    def __getitem__(self, key):
+        return self.__errors[key]
+
+    def loopOerrs(self, key):
+        if key in self.__errors:
+            for err in self.__errors[key]:
+                yield err
+
+    # def logit(self, key, method='warning'):
+    #     if key in self.__errors:
+    #         for err in self.__errors[key]:
+    #             getattr(logger, method)(err)
+
+    def as_list(self):
+        return list(self.__tracebacks.values())
+
+
 def details(response):
     """ property -> details """
 
     info = Accumulator()
-    warnings = []
+    warnings = Exceptions()
 
     try:
+        url = response.find('link', {'rel': 'canonical'})['href']
         sid = list(filter(
             None,
-            response.find('link', {'rel': 'canonical'})['href'].split('/')
+            url.split('/')
         ))[-1]
     except Exception as err:
         sid = None
-        warnings.append(traceback.format_exc())
-        logger.error(err)
+        warnings['sid'] = err
     else:
         info['sid'] = sid
 
     # Extra lon-lat informations
+
+    lon_lat = None
+
     try:
         bkg_img_url = response.find("div", {"data-background-image": re.compile("http")})["data-background-image"]
         center_ = re.search('center=(.*)&', bkg_img_url).group(0)
         lon_lat_ = urllib.parse.unquote(center_.split("&")[0][len('center='):]).split(',')[::-1]
+        lon, lat = map(float, lon_lat_)
     except Exception as err:
-        lon_lat = None
-        warnings.append(traceback.format_exc())
-        logger.error(err)
+        warnings['lon_lat'] = err
     else:
-        lon_lat = map(float, lon_lat_)
+        lon_lat = [lon, lat]
 
-    title_error, title_tb = None, None
+    if 'lon_lat' in warnings:
+
+        try:
+            script_ = response.find("script", {"id": "js-hydration"}).contents[0]
+            location_ = loads(script_)["listing"]["properties"][0]["location"]
+        except Exception as err:
+            warnings['lon_lat'] = err
+        else:
+            try:
+                lon, lat = map(float, [location_['longitude'], location_['latitude']])
+            except Exception as err:
+                warnings['lon_lat'] = err
+            else:
+                lon_lat = [lon, lat]
+
+            if location_.get('address'):
+                info['address'] = location_['address']
+
+            for nn in ['region', 'city', 'province', 'nation']:
+                if location_.get(nn, {}).get('name'):
+                    info[f'address:{nn}'] = location_[nn]['name']
+
+    if lon_lat is None:
+        for err in warnings.loopOerrs('lon_lat'):
+            logger.error(err)
+    else:
+        warnings.clean('lon_lat')
 
     try:
         title = response.find('span', {'class': 'im-titleBlock__title'}).text.strip()
     except Exception as err:
-        pass
-        # warnings.append(traceback.format_exc())
-        title_error, title_tb = err, traceback.format_exc()
-        # logger.warning(err)
+        warnings['title'] = err
     else:
         info['title'] = title
 
     try:
         title = response.find('h1', {'class': 'raleway title-detail'}).text.strip()
     except Exception as err:
-        pass
-        warnings.append(traceback.format_exc())
-        logger.warning(err)
+        warnings['title'] = err
     else:
         info['title'] = title
-        title_error = None
 
-    if not title_error is None:
-        warnings.append(title_tb)
-        logger.warning(title_error)
-
+    if 'title' in info:
+        warnings.clean('title')
+    else:
+        for err in warnings.loopOerrs('title'):
+            logger.warning(err)
     try:
-        address_=response.find("span",{"class":re.compile(r"im-address__content js-map-address")})
+        address_ = response.find("span",{"class":re.compile(r"im-address__content js-map-address")})
         address_1 = re.sub(' +', ' ', address_.text.strip()).replace("\n","")
     except Exception as err:
-        warnings.append(traceback.format_exc())
-        logger.warning(err)
+        warnings['address'] = err
     else:
         info['address'] = address_1
 
@@ -224,35 +292,103 @@ def details(response):
         address_=response.find("span",{"class":re.compile(r"im-address__content js-map-address")})
         address_2 = address_.text.strip()
     except Exception as err:
-        warnings.append(traceback.format_exc())
-        logger.warning(err)
+        warnings['address'] = err
     else:
         info['address'] = address_2
 
-    sticky_contact_bottom = response.find('div', {'id': 'sticky-contact-bottom'})
+    try:
+        address_ = response.find("div",{"class": "im-map__description"})
+        address_3 = address_.text.strip()
+    except Exception as err:
+        warnings['address'] = err
+    else:
+        info['address'] = address_3
 
     try:
-        surface_container = sticky_contact_bottom.find('li', {'class': 'features__only-text'})
-        info['surface'] = surface_container.text.strip().replace('.', '')
-        surface_ = re.search("^[0-9]+", info['surface']).group(0)
+        address_ = response.findAll("span", {"class": "im-location"})
+        address_4 = ', '.join(map(lambda tag: tag.text.strip(), address_))
     except Exception as err:
-        warnings.append(traceback.format_exc())
-        logger.critical('Exception raised while getting the surface value')
-        logger.critical(err)
+        warnings['address'] = err
     else:
-        if surface_:
-            info['surface:m²'] = int(surface_)
+        info['address'] = address_4
 
-    try:
-        price_container = sticky_contact_bottom.find('li', {'class': 'features__price'})
-        cost_ = price_container.text
-    except Exception as err:
-        warnings.append(traceback.format_exc())
-        logger.critical('Exception raised while getting the price value')
-        logger.critical(err)
+    if "address" in info:
+        warnings.clean('address')
     else:
-        price = Price.fromstring(cost_)
-        info['price:{}'.format(price.currency)] = price.amount
+        import pdb; pdb.set_trace()
+        for err in warnings.loopOerrs("address"):
+            logger.warning(err)
+
+    mainFeatures_container = response.find('div', {'id': 'sticky-contact-bottom'})
+
+    # surface, price = None, None
+
+    if not mainFeatures_container is None:
+
+        try:
+            surface_container = mainFeatures_container.find('li', {'class': 'features__only-text'})
+            info['surface'] = surface_container.text.strip() #.replace('.', '')
+            surface = re.search("^[0-9]+", info['surface']).group(0)
+        except Exception as err:
+            warnings['surface'] = err
+        else:
+            if surface_:
+                info['surface:m²'] = int(surface)
+
+        try:
+            price_container = mainFeatures_container.find('li', {'class': 'features__price'})
+            cost_ = price_container.text
+        except Exception as err:
+            warnings['price'] = err
+        else:
+            pricekey, price = priceformat(cost_)
+            info[pricekey] = price
+
+    mainFeatures_container = response.find('div', {'class': 'im-mainFeatures'})
+
+    if not mainFeatures_container is None:
+
+        try:
+            price_container = mainFeatures_container.find('li', {'class': 'im-mainFeatures__price'})
+            cost_ = price_container.text.strip()
+        except Exception as err:
+            warnings['price'] = err
+        else:
+            pricekey, price = priceformat(cost_)
+            info[pricekey] = price
+
+        for item in mainFeatures_container.findAll('li'):
+            title_ = item.find("span", {'class': 'im-mainFeatures__label'})
+            if not title_ is None:
+                value_ = item.find("span", {'class': 'im-mainFeatures__value'})
+                if value_ is None:
+                    import pdb; pdb.set_trace()
+                symbol_ = value_.find("span", {'class': 'im-mainFeatures__symbol'})
+                if not symbol_ is None:
+                    symbol = symbol_.text or ''
+                else:
+                    symbol = ''
+
+                key = f"{title_.text}"
+                if symbol:
+                    key += f":{symbol}"
+                value = clean(value_.text.strip())
+                if key.startswith("surface"):
+                    value = int(re.search("^[0-9]+", value).group(0))
+
+                info[key] = value
+
+    if not 'price' in info:
+        for err in warnings.loopOerrs("price"):
+            logger.error(err)
+    else:
+        warnings.clean('price')
+
+    if not 'surface:m²' in info:
+        for err in warnings.loopOerrs('surface'):
+            logger.error(err)
+    else:
+        warnings.clean('surface')
 
     try:
         for section in response.findAll("div",{"class":"row section-data"}):
@@ -267,7 +403,7 @@ def details(response):
                     try:
                         key, value = map(lambda kw_: str(kw_.text), kw)
                     except Exception as err:
-                        warnings.append(traceback.format_exc())
+                        warnings[key] = err
                     else:
                         if any(map(
                             lambda t: (t in key),
@@ -275,18 +411,23 @@ def details(response):
                                 "Reference and ad Date", "Contract", "Type", "Surface",
                                 "Rooms", "Floor", "Availability", "Property type",
 
-                                "Condominium", "Cadastral information",
+                                "Price", "Condominium", "Cadastral information",
 
                                 "Condition", "Heating", "Air", "Energy", "Global", "Year"
                             ]
                         )):
-                            info[key.lower()] = clean(value)
+                            if "Price" in key:
+                                pricekey, pricevalue = priceformat(clean(value))
+                                info[pricekey] = pricevalue.strip()
+                            else:
+                                info[key.lower()] = clean(value)
     except Exception as err:
         warnings.append(traceback.format_exc())
 
-    return sid, lon_lat, info, warnings
+    return sid, lon_lat, info, warnings.as_list()
 
 def property(response):
+    """ DEPRECATED """
 
     title_ = response.find('span', {'class': 'im-titleBlock__title'})
     title = title_ and title_.text.strip()
