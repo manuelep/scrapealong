@@ -201,6 +201,60 @@ class Exceptions(object):
         return list(self.__tracebacks.values())
 
 
+def summary(response):
+    """ """
+
+    for prop in response.findAll("div", {"class": "listing-item_body--content"}):
+
+        info = Accumulator()
+
+        try:
+            title_ = prop.find("p",{"class":"titolo text-primary"})
+        except Exception as err:
+            logger.info(err)
+            logger.debug(traceback.format_exc())
+            continue
+        else:
+            title_name=title_.a['title']
+            title_link=title_.a['href']
+            sid = re.search(r'/(\d+)/', title_link).group(1)
+            info['property'] = title_name.split()[0]
+
+        try:
+            price_ = prop.find("li", {"class":re.compile(r'lif__item lif__pricing')})
+            cost = price_.text.strip().replace('.', '')
+            # price_ = int(re.findall(r'\d+', price_)[0])
+        except Exception as err:
+            logger.info(err)
+            logger.debug(traceback.format_exc())
+        else:
+            pricekey, price = priceformat(cost_)
+            info[pricekey] = price
+
+        all_items = prop.findAll(
+            "li",
+            {"class": re.compile(r'lif__item|lif__item hidden-xs')}
+        )
+
+        for item in all_items:
+
+            try:
+                key = next(filter(lambda kk: kk in item, ['bathroom', 'room', 'floor', 'surface']))
+                item_ = item.text.strip()
+                value = " ".join(item_.split())
+            except StopIteration:
+                continue
+            except Exception as err:
+                logger.info(err)
+                logger.debug(traceback.format_exc())
+                continue
+            else:
+                if key == 'surface':
+                    info[key] = value.replace('surface', '').strip().replace('.', '')
+                else:
+                    info[key] = value
+        yield info
+
 def details(response):
     """ property -> details """
 
@@ -315,7 +369,6 @@ def details(response):
     if "address" in info:
         warnings.clean('address')
     else:
-        import pdb; pdb.set_trace()
         for err in warnings.loopOerrs("address"):
             logger.warning(err)
 
@@ -361,8 +414,6 @@ def details(response):
             title_ = item.find("span", {'class': 'im-mainFeatures__label'})
             if not title_ is None:
                 value_ = item.find("span", {'class': 'im-mainFeatures__value'})
-                if value_ is None:
-                    import pdb; pdb.set_trace()
                 symbol_ = value_.find("span", {'class': 'im-mainFeatures__symbol'})
                 if not symbol_ is None:
                     symbol = symbol_.text or ''
@@ -421,6 +472,9 @@ def details(response):
                                 info[pricekey] = pricevalue.strip()
                             else:
                                 info[key.lower()] = clean(value)
+                                if "Floor" in key:
+                                    if "with lift" in value:
+                                        info['lift'] = True
     except Exception as err:
         warnings.append(traceback.format_exc())
 
