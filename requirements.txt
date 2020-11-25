@@ -2,4 +2,4 @@ aiohttp
 bs4
 price-parser
 pyppeteer
--e git+git@bitbucket.org:colouree/swissknife.git@py3ready#egg=swissknife
+-e git+https://github.com/manuelep/kilimanjaro.git#egg=kilimanjaro

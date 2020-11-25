@@ -11,7 +11,7 @@ from pyppeteer import launch
 from pyppeteer.errors import ElementHandleError
 from pyppeteer.errors import TimeoutError
 import logging
-from swissknife.timeformat import prettydelta
+from kilimanjaro.timeformat import prettydelta
 import datetime
 
 FETCH_TIMEOUT = 25.
