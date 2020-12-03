@@ -59,4 +59,4 @@ IMMOBILIARE_LOCATIONS = [
 try:
     from .settings_private import *
 except ModuleNotFoundError:
-    raise
+    pass
