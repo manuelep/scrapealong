@@ -10,6 +10,8 @@ import numbers, datetime, types
 from enum import Enum
 from decimal import Decimal
 import itertools
+import nest_asyncio
+nest_asyncio.apply()
 
 class Accumulator(dict):
     """docstring for Info."""
@@ -71,10 +73,11 @@ class Loop(object):
 
     def __init__(self):
         super(Loop, self).__init__()
-        if asyncio.get_event_loop().is_closed():
+        current_loop = asyncio.get_event_loop()
+        if current_loop.is_closed():
             self.loop = asyncio.new_event_loop()
         else:
-            self.loop = asyncio.get_event_loop()
+            self.loop = current_loop
 
     def __enter__(self):
         """ """

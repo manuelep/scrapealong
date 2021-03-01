@@ -3,3 +3,4 @@ bs4
 price-parser
 pyppeteer
 -e git+https://github.com/manuelep/kilimanjaro.git#egg=kilimanjaro
+nest_asyncio

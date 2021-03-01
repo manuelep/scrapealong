@@ -26,8 +26,7 @@ class Digger(SlowFetcher):
         other_pages = await asyncio.gather(*[self.fetch(comune_url+'?pag={}'.format(pp)) for pp in range(2, npages+1)])
         # other_preliminary_infos = map(lambda resp: props(resp, state=state, comune=comune), other_pages)
         all_pages = chain((first_page,), other_pages)
-        print(comune_url)
-        return chain(*map(scrape.properties, all_pages))
+        return chain(*map(scrape.properties, filter(None, all_pages)))
 
 
 class Picker(MultiPicker):

@@ -81,7 +81,7 @@ def get_feature_(row, updates, lon_lat):
 
 def champ(n=100):
     # WARNING: Do not run this version in parallel tasks.
-    pages_ = db(db.page.id>0)._select(db.page.amenities_id)
+    pages_ = db(db.page.id>0)._select(db.page.amenity_id)
     res = db(~db.amenity.id.belongs(pages_)).select(
         orderby = db.amenity.id,
         limitby = (0, n,) if not n is None else None,
