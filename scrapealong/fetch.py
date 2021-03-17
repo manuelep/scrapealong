@@ -7,9 +7,9 @@ from bs4 import BeautifulSoup
 import asyncio
 import re, json
 
-from pyppeteer import launch
-from pyppeteer.errors import ElementHandleError
-from pyppeteer.errors import TimeoutError
+# from pyppeteer import launch
+# from pyppeteer.errors import ElementHandleError
+# from pyppeteer.errors import TimeoutError
 import logging
 from kilimanjaro.timeformat import prettydelta
 import datetime
@@ -70,47 +70,47 @@ async def fetch(url, retry=3):
 
     return parser(body)
 
-@timeit
-async def browse(url, retry=3):
-    """ DEPRECATED BUT STILL IN USE """
+# @timeit
+# async def browse(url, retry=3):
+#     """ DEPRECATED BUT STILL IN USE """
 
-    info = {}
+#     info = {}
 
-    browser = await launch()
-    page = await browser.newPage()
+#     browser = await launch()
+#     page = await browser.newPage()
 
-    for tt in range(retry):
-        try:
-            res_ = await page.goto(url, timeout=BROWSE_TIMEOUT)
-        except TimeoutError as err:
-            if tt < retry-1:
-                await asyncio.sleep(RETRY_WITHIN)
-                continue
-            else:
-                raise err
-        else:
-            # body = await res_.text()
-            body = await page.content()
-            break
+#     for tt in range(retry):
+#         try:
+#             res_ = await page.goto(url, timeout=BROWSE_TIMEOUT)
+#         except TimeoutError as err:
+#             if tt < retry-1:
+#                 await asyncio.sleep(RETRY_WITHIN)
+#                 continue
+#             else:
+#                 raise err
+#         else:
+#             # body = await res_.text()
+#             body = await page.content()
+#             break
 
-    try:
-        # This code get longitude and latitude information for *tripadvisor* pages only
-        span = await page.evaluate('''() => {
-            var elem = document.querySelector('[data-test-target="staticMapSnapshot"]');
-            return elem.outerHTML
-        }''')
-    except ElementHandleError:
-        lon_lat = None
-    else:
-        center_ = re.search(';center=.*?\&', span)
-        if not center_ is None:
-            lon_lat = list(map(float, center_.group()[8:-1].split(',')))[::-1]
-        else:
-            lon_lat = None
+#     try:
+#         # This code get longitude and latitude information for *tripadvisor* pages only
+#         span = await page.evaluate('''() => {
+#             var elem = document.querySelector('[data-test-target="staticMapSnapshot"]');
+#             return elem.outerHTML
+#         }''')
+#     except ElementHandleError:
+#         lon_lat = None
+#     else:
+#         center_ = re.search(';center=.*?\&', span)
+#         if not center_ is None:
+#             lon_lat = list(map(float, center_.group()[8:-1].split(',')))[::-1]
+#         else:
+#             lon_lat = None
 
-    await browser.close()
+#     await browser.close()
 
-    return lon_lat, parser(body), url,
+#     return lon_lat, parser(body), url,
 
 @timeit
 async def browse_new(url, retry=3):
