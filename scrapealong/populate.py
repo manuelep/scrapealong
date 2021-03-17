@@ -151,6 +151,39 @@ async def fetchall_(res):
 
     return promeses_
 
+def fetchall_new(res):
+    """ Fetches amenities pages, caches html in local db and yields the geojson
+    feature representing the amenity.
+    """
+
+    promeses_ = []
+    for row in res:
+        if  (row.source_name == settings.tripadvisor):
+            if (row.amenity==RESTAURANT):
+                browser = Restaurant(row.url)
+            elif (row.amenity==HOTEL):
+                browser = Hotel(row.url)
+            elif (row.amenity==TOURISM):
+                browser = Tourism(row.url)
+            else:
+                raise NotImplementedError
+        elif (row.source_name == settings.immobiliareit):
+            if (row.amenity==FORSALE):
+                browser = ForSaleProp(row.url)
+            else:
+                continue
+                raise NotImplementedError
+        else:
+            continue
+            raise NotImplementedError
+        promeses_.append(browser)
+
+    # semaphoro = asyncio.Semaphore(10)
+    # async with semaphoro:
+    # await asyncio.gather(*map(lambda p: p(), promeses_))
+
+    return promeses_
+
 def fetchall(champ=500, commit=False):
 
     pages_ = db(db.page.id>0)._select(db.page.amenity_id)
@@ -171,8 +204,10 @@ def fetchall(champ=500, commit=False):
             orderby = (db.amenity.source_name, db.amenity.id,),
             limitby = (start, start+champ-1,)
         )
-        with Loop() as loop:
-            all_updates = loop.run_until_complete(fetchall_(res))
+        all_updates=fetchall_new(res)
+        # with Loop() as loop:
+            
+        #     all_updates = loop.run_until_complete(fetchall_(res))
 
         for upd,amenity in tqdm(zip(all_updates, res), desc='Looping on a chunk of features', total=len(res)):
 
