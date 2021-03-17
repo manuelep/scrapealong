@@ -158,6 +158,7 @@ def fetchall_new(res):
 
     promeses_ = []
     for row in res:
+        browser=None
         if  (row.source_name == settings.tripadvisor):
             if (row.amenity==RESTAURANT):
                 browser = Restaurant(row.url)
@@ -171,10 +172,8 @@ def fetchall_new(res):
             if (row.amenity==FORSALE):
                 browser = ForSaleProp(row.url)
             else:
-                continue
                 raise NotImplementedError
         else:
-            continue
             raise NotImplementedError
         promeses_.append(browser)
 
