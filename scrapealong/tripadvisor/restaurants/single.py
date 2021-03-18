@@ -18,6 +18,6 @@ class Picker(BasePicker):
         return map(lambda args: (args[0], scrape.details(*args[1:]), args[1],), geo_and_props)
 
 class Browser(Browser_):
+    """ """
 
-    def _load(self):
-        self.sid, self.details, self.warnings = scrape.details(self.body)
+    scrape = lambda self, response: scrape.details(response)

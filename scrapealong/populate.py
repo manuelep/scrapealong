@@ -12,9 +12,9 @@ from .immobiliare_it.fetchall import fetchall_ as fetchall_im
 
 from contextlib import contextmanager
 
-from .tripadvisor.restaurants.single import Picker as ResPicker
-from .tripadvisor.hotels.single import Picker as HotPicker
-from .immobiliare_it.for_sale.single import Picker as SalPicker
+# from .tripadvisor.restaurants.single import Picker as ResPicker
+# from .tripadvisor.hotels.single import Picker as HotPicker
+# from .immobiliare_it.for_sale.single import Picker as SalPicker
 
 from .tripadvisor.restaurants.scrape import details as res_details
 from .tripadvisor.hotels.scrape import details as hot_details
@@ -22,10 +22,19 @@ from .tripadvisor.hotels.scrape import details as hot_details
 from .immobiliare_it.for_sale.scrape import details as sal_details
 
 from .tripadvisor.restaurants.single import Browser as Restaurant
+from .tripadvisor.restaurants.single import Picker as RestPicker
 from .tripadvisor.restaurants.scrape import AMENITY as RESTAURANT
+
 from .tripadvisor.hotels.single import Browser as Hotel
+# from .tripadvisor.hotels.single import Picker as HotPicker
 from .tripadvisor.hotels.scrape import AMENITY as HOTEL
+
+from .tripadvisor.turism.single import Browser as Attraction
+# from .tripadvisor.turism.single import Picker as AttrPicker
+from .tripadvisor.turism.scrape import AMENITY as ATTRACTION
+
 from .immobiliare_it.for_sale.single import Browser as ForSaleProp
+# from .immobiliare_it.for_sale.single import Picker as ForSalePicker
 from .immobiliare_it.for_sale.scrape import AMENITY as FORSALE
 
 from .fetch import parser
@@ -90,14 +99,15 @@ def champ(n=100):
     return res.group_by_value(db.amenity.amenity)
 
 def fetch(n=500, commit=False):
-    """ Fetches amenities pages, caches html in local db and yields the geojson
+    """ DEPRECATED ?!?
+    Fetches amenities pages, caches html in local db and yields the geojson
     feature representing the amenity.
     """
     for source_name, res_ in champ(n).items():
         if amenity=='restaurant':
-            picker = ResPicker()
+            picker = Restaurant()
         elif amenity=='hotel':
-            picker = HotPicker()
+            picker = Hotel()
         else:
             raise NotImplementedError
 
@@ -130,6 +140,8 @@ async def fetchall_(res):
                 browser = Restaurant(row.url)
             elif (row.amenity==HOTEL):
                 browser = Hotel(row.url)
+            elif (row.amenity==ATTRACTION):
+                browser = Attraction(row.url)
             else:
                 raise NotImplementedError
         elif (row.source_name == settings.immobiliareit):
@@ -152,8 +164,6 @@ def fetchall(champ=500, commit=False):
     pages_ = db(db.page.id>0)._select(db.page.amenity_id)
     baseset = db(
         (db.amenity.id > 0)
-        # ~db.amenity.id.belongs(pages_) # & \
-        # (db.amenity.source_name==settings.immobiliareit)
     )
     noa = baseset.count()
 
@@ -263,8 +273,9 @@ def extract2():
         else:
             raise NotImplementedError
 
-        updates = details(parser(row.page), row.url)
-        yield updates, row.source_name,
+        sid, updates, warnings = details(parser(row.page))
+
+        yield updates, warnings, row.source_name,
 
 
 if __name__ == '__main__':

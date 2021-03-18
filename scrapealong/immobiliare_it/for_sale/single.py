@@ -17,7 +17,6 @@ class Picker(BasePicker):
         return map(scrape.property, resps)
 
 class Browser(Browser_):
-    """docstring for Browser."""
+    """ """
 
-    def _load(self):
-        self.sid, self.lon_lat, self.details, self.warnings = scrape.details(self.body)
+    scrape = lambda self, response: scrape.details(response)

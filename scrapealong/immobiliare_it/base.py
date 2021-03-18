@@ -2,13 +2,16 @@
 
 from ..base import BaseBrowser
 
+
 class Browser(BaseBrowser):
     """docstring for Browser."""
 
-    async def _page_callback(self, page):
-        """  """
-
     __call__ = BaseBrowser._fetch
 
-    # def load(self):
-    #     self.details = scrape.details(self.body, self.url)
+    @staticmethod
+    def scrape():
+        raise NotImplementedError()
+
+    def _load(self):
+
+        self.sid, self.lon_lat, self.details, self.warnings = self.scrape(self.body)

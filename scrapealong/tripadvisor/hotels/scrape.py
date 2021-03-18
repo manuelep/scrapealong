@@ -8,7 +8,9 @@ from decimal import Decimal
 import traceback
 from ... common import logger
 from ... helpers import Accumulator
-from ..scrape import pagination as pagination
+# from ..scrape import pagination as pagination
+from itertools import zip_longest
+from ..scrape import parse_script
 
 AMENITY = 'hotel'
 
@@ -118,6 +120,39 @@ def details(response):
     for tb in sid_tbs:
         warnings.append(tb)
 
+    try:
+        scriptCode = response.find('script', text = re.compile("""typeahead.recentHistoryList"""), attrs = {"type":"text/javascript"})
+        oo = parse_script(str(scriptCode), sid)
+        lat, lon = map(float, oo['coords'].split(','))
+    except Exception as err:
+        lon_lat = None
+        warnings.append(traceback.format_exc())
+        logger.warning(err)
+    else:
+        lon_lat = lon, lat,
+
+        try:
+            info['url'] = oo['url']
+        except Exception as err:
+            warnings.append(traceback.format_exc())
+            logger.warning(err)
+
+        try:
+            info['name'] = oo['details']['name']
+        except Exception as err:
+            warnings.append(traceback.format_exc())
+            logger.warning(err)
+
+    if not 'name' in info:
+        name_ = response.find("h1", {"id": "HEADING"})
+        try:
+            name = name_.text.strip()
+        except Exception as err:
+            warnings.append(traceback.format_exc())
+            logger.warning(err)
+        else:
+            info['name'] = name
+
     rank_ = response.find("div",{"class":"_1vpp5J_x"})
     try:
         rank_ = response.find("div",{"class":"_1vpp5J_x"}).text.strip()
@@ -141,19 +176,55 @@ def details(response):
         phone = response.find("a",{"class":"_1748LPGe"}).text
     except Exception as err:
         warnings.append(traceback.format_exc())
-        logger.warning(err)
+        logger.warning(f"Phone number not found: {err}")
     else:
         info['phone'] = phone
 
-    name_ = response.find("h1", {"id": "HEADING"})
+    # TODO: Implement here the calculation of other parameters useful for rating
+
+    property_amenities_name=[]
+    property_amenities_cat=[]
+    room_features_name=[]
+    room_features_cat=[]
+    room_types_name=[]
+    room_types_cat=[]
+
     try:
-        name = name_.text.strip()
+
+        about_ = response.findAll("div", attrs={"class":"ui_columns _318JyS8B"})
+        about = next(filter(lambda x:"Property amenities" in x.text,  about_))
+
+        about_ui_ = about.findAll("div",{"class":"ui_column"})
+        about_ui = next(filter(lambda x:"Property amenities" in x.text,  about_ui_))
+
+        about_info = json.loads(about_ui.div["data-ssrev-handlers"])
+        abouts = about_info['load'][3]['amenities']
+
+        property_amenities = abouts['highlightedAmenities']['propertyAmenities']+abouts['nonHighlightedAmenities']['propertyAmenities']
+        room_features = abouts['highlightedAmenities']['roomFeatures']+abouts['nonHighlightedAmenities']['roomFeatures']
+        room_types = abouts['highlightedAmenities']['roomTypes']+abouts['nonHighlightedAmenities']['roomTypes']
+
+        for x,y,z in zip_longest(property_amenities,room_features,room_types):
+
+            if not x==None:
+                property_amenities_name.append(x['amenityNameLocalized'])
+                property_amenities_cat.append(x['amenityCategoryName'])
+            if not y==None:
+                room_features_name.append(y['amenityNameLocalized'])
+                room_features_cat.append(y['amenityCategoryName'])
+            if not z==None:
+                room_types_name.append(z['amenityNameLocalized'])
+                room_types_cat.append(z['amenityCategoryName'])
+
     except Exception as err:
         warnings.append(traceback.format_exc())
         logger.warning(err)
     else:
-        info['name'] = name
+        info['property_amenities_name'] = property_amenities_name
+        info['property_amenities_cat'] = property_amenities_cat
+        info['room_features_name'] = room_features_name
+        info['room_features_cat'] = room_features_cat
+        info['room_types_name'] = room_types_name
+        info['room_types_cat'] = room_types_cat
 
-    # TODO: Implement here the calculation of other parameters useful for rating
-
-    return sid, info, warnings
+    return sid, lon_lat, info, warnings

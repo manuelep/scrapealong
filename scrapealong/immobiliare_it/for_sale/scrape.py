@@ -275,8 +275,7 @@ def details(response):
 
     # Extra lon-lat informations
 
-    lon_lat = None
-
+    # First guess
     try:
         bkg_img_url = response.find("div", {"data-background-image": re.compile("http")})["data-background-image"]
         center_ = re.search('center=(.*)&', bkg_img_url).group(0)
@@ -284,11 +283,13 @@ def details(response):
         lon, lat = map(float, lon_lat_)
     except Exception as err:
         warnings['lon_lat'] = err
+        lon_lat = None
     else:
         lon_lat = [lon, lat]
 
     if 'lon_lat' in warnings:
 
+        # Second guess
         try:
             script_ = response.find("script", {"id": "js-hydration"}).contents[0]
             location_ = loads(script_)["listing"]["properties"][0]["location"]
@@ -478,7 +479,7 @@ def details(response):
     except Exception as err:
         warnings.append(traceback.format_exc())
 
-    return sid, lon_lat, info, warnings.as_list()
+    return sid, lon_lat, info, warnings.as_list(),
 
 def property(response):
     """ DEPRECATED """

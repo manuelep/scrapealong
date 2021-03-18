@@ -116,8 +116,13 @@ class BaseBrowser(object):
                         logger.error(err)
                         await page.close()
                         await browser.close()
-                        raise
+                        break
+                        # raise
                 except pyppeteer.errors.BrowserError as err:
+                    logger.critical(err)
+                    logger.error(traceback.format_exc())
+                    continue
+                except pyppeteer.errors.PageError as err:
                     logger.critical(err)
                     logger.error(traceback.format_exc())
                     continue

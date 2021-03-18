@@ -20,7 +20,6 @@ for item in settings.LOGGERS:
     logger.setLevel(getattr(logging, level.upper(), "DEBUG"))
     logger.addHandler(handler)
 
-
 # connect to db
 db = DAL(
     settings.DB_URI,

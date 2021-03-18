@@ -32,23 +32,31 @@ class MultiPicker(BasePicker):
 class Browser(BaseBrowser):
     """docstring for Browser."""
 
-    __call__ = BaseBrowser._browse
+    __call__ = BaseBrowser._fetch
 
-    async def _page_callback(self, page):
-        """  """
-        try:
-            # This code get longitude and latitude information for *tripadvisor* pages only
-            span = await page.evaluate('''() => {
-                var elem = document.querySelector('[data-test-target="staticMapSnapshot"]');
-                return elem.outerHTML
-            }''')
-        except ElementHandleError:
-            lon_lat = None
-        else:
-            center_ = re.search(';center=.*?\&', span)
-            if not center_ is None:
-                lon_lat = list(map(float, center_.group()[8:-1].split(',')))[::-1]
-            else:
-                lon_lat = None
+    @staticmethod
+    def scrape():
+        raise NotImplementedError()
 
-        self.lon_lat = lon_lat
+    def _load(self):
+
+        self.sid, self.lon_lat, self.details, self.warnings = self.scrape(self.body)
+
+    # async def _page_callback(self, page):
+    #     """  """
+    #     try:
+    #         # This code get longitude and latitude information for *tripadvisor* pages only
+    #         span = await page.evaluate('''() => {
+    #             var elem = document.querySelector('[data-test-target="staticMapSnapshot"]');
+    #             return elem.outerHTML
+    #         }''')
+    #     except ElementHandleError:
+    #         lon_lat = None
+    #     else:
+    #         center_ = re.search(';center=.*?\&', span)
+    #         if not center_ is None:
+    #             lon_lat = list(map(float, center_.group()[8:-1].split(',')))[::-1]
+    #         else:
+    #             lon_lat = None
+    #
+    #     self.lon_lat = lon_lat

@@ -46,6 +46,11 @@ TRIPADVISOR_RESTAURANTS_LOCATIONS = [
     # 'Restaurants-g187849-Milan_Lombardy.html',
 ]
 
+TRIPADVISOR_TOURISM_LOCATIONS = [
+    # Examples
+    'Attractions-g187849-Activities-a_allAttractions.true-Milan_Lombardy.html'
+]
+
 IMMOBILIARE_LOCATIONS = [
     # Examples
     # "Torino",

@@ -13,11 +13,11 @@ class Picker(BasePicker):
 
     async def run(self, urls):
         fetcher = SlowFetcher()
-        geo_and_props = await asyncio.gather(*[fetcher.browse(url) for url in tqdm(urls)])
+        responses = await asyncio.gather(*[fetcher.fetch(url) for url in tqdm(urls)])
 
         return map(lambda args: (args[0], scrape.details(*args[1:]), args[1],), geo_and_props)
 
 class Browser(Browser_):
+    """ """
 
-    def _load(self):
-        self.sid, self.details, self.warnings = scrape.details(self.body)
+    scrape = lambda self, response: scrape.details(response)
