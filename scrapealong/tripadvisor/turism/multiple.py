@@ -31,6 +31,7 @@ class Picker(MultiPicker):
         offset = scrape.pagination(response)
 
         first = [jj for jj in scrape.collection(response)]
+        # first = [jj for jj in scrape.collection(first_page_url, response)]
 
         if not offset is None:
             pages = [self.url(self.PAGINATE*ii) for ii in range(1,int(offset)+1)]
@@ -39,6 +40,7 @@ class Picker(MultiPicker):
             others_ = []
 
         return chain(first, *map(scrape.collection, tqdm(filter(None, others_))))
+        # return chain(first, *map(lambda kk: scrape.collection(*kk), tqdm(filter(lambda cc: cc[1] is None, zip(pages, others_)))))
 
 
 if __name__ == '__main__':

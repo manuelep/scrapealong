@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-import re
+import re, json
 from tqdm import tqdm
 from price_parser import Price
 from decimal import Decimal
@@ -33,6 +33,10 @@ def collection(response):
         reviews_ = restaurant.find("span",{"class":"w726Ki5B"})
         if not reviews_ is None:
             info['reviews'] = int(re.search('[0-9]+', reviews_.text).group())
+            info['views'] = int(re.search('[0-9]+', reviews_.text).group()) * 4
+        else:
+            info['reviews']=0
+            info['views'] = 0
 
         name_ = restaurant.find("a",{"class":"_15_ydu6b"})
         if not name_ is None:

@@ -19,7 +19,6 @@ def pagination(response):
 def collection(response):
     """ """
 
-
     attractions_=response.find(
         "div",
         {"class":"_3W_31Rvp _1nUIPWja _3-Olh12m _2b3s5IMB"}

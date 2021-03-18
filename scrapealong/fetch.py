@@ -72,7 +72,7 @@ async def fetch(url, retry=3):
 
 @timeit
 async def browse(url, retry=3):
-    """ DEPRECATED BUT STILL IN USE """
+    """ DEPRECATED """
 
     info = {}
 
@@ -124,7 +124,7 @@ class SlowFetcher(object):
             response = await fetch(url)
         return response
 
-    async def browse(self, url):
-        async with self.semaphoro:
-            response = await browse(url)
-        return response
+    # async def browse(self, url):
+    #     async with self.semaphoro:
+    #         response = await browse(url)
+    #     return response

@@ -68,6 +68,9 @@ def populate(commit=False):
             source_name = source_name,
             properties = updates
         )
+    # import pdb; pdb.set_trace()
+    if commit:
+        db.commit()
 
     if commit:
         db.commit()
