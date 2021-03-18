@@ -11,7 +11,13 @@ from ... helpers import Accumulator
 # from ..scrape import pagination as pagination
 from itertools import zip_longest
 from ..scrape import parse_script
-
+HOTEL_MAIN_BLOCK="ui_column is-8 main_col allowEllipsis"
+HOTEL_SID="data-locationid"
+HOTEL_PRICE="price-wrap"
+HOTEL_PRICE_PROVIDER=r'provider '
+HOTEL_STARS=r'ui_bubble_rating bubble_'
+HOTEL_REVIEWS="review_count"
+HOTEL_NAME_LINK="property_title prominent"
 AMENITY = 'hotel'
 
 def pagination_(pages):
