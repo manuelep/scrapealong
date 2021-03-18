@@ -19,7 +19,8 @@ def parse_script(body, sid=None, **kwargs):
     if sid is None:
         ll = list(filter(lambda dd: ('coords' in dd) and all([dd[k]==v for k,v in kwargs.items()]), ss))
         if len(ll)>1:
-            import pdb; pdb.set_trace()
+            pass
+            #import pdb; pdb.set_trace()
         return ll[0]
     else:
         return next(filter(lambda dd: str(dd['value'])==sid, ss))
