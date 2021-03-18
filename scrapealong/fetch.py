@@ -65,7 +65,10 @@ async def fetch(url, retry=3):
                     raise
             else:
                 if response.status>=400:
-                    return
+                    if tt < retry-1:
+                        await asyncio.sleep(RETRY_WITHIN)
+                        continue
+                    raise Exception(response.status)
                 break
 
     return parser(body)

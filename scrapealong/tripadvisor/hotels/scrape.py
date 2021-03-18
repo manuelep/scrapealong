@@ -8,9 +8,13 @@ from decimal import Decimal
 import traceback
 from ... common import logger
 from ... helpers import Accumulator
-# from ..scrape import pagination as pagination
-from itertools import zip_longest
+
 from ..scrape import parse_script
+
+from itertools import zip_longest
+# from ..scrape_conf import *
+
+from . import settings
 
 AMENITY = 'hotel'
 
@@ -27,25 +31,25 @@ def pagination(response):
 
 def collection(response):
     """ """
-    hotels_=response.findAll("div",{"class":HOTEL_MAIN_BLOCK})
+    hotels_=response.findAll("div",{"class": settings.HOTEL_MAIN_BLOCK})
 
     infos = []
     for hotel in tqdm(hotels_,total=len(hotels_)):
         info = {'amenity': AMENITY}
 
-        info['sid'] = hotel.find("div", {HOTEL_SID: re.compile(".")})[HOTEL_SID]
+        info['sid'] = hotel.find("div", {settings.HOTEL_SID: re.compile(".")})[settings.HOTEL_SID]
 
-        cost__ = hotel.find("div",{"class":HOTEL_PRICE})
+        cost__ = hotel.find("div",{"class": settings.HOTEL_PRICE})
         if not cost__ is None:
             cost_ = cost__.find("div",{"class":re.compile(r'price ')}).text
             price = Price.fromstring(cost_)
             info['price:{}'.format(price.currency)] = price.amount
 
-        provider_ = hotel.find("div",{"class":re.compile(HOTEL_PRICE_PROVIDER)})
+        provider_ = hotel.find("div",{"class":re.compile(settings.HOTEL_PRICE_PROVIDER)})
         if not provider_ is None:
             info['provider'] = provider_.text
 
-        stars__ = hotel.find("a",{"class":re.compile(HOTEL_STARS)})
+        stars__ = hotel.find("a",{"class":re.compile(settings.HOTEL_STARS)})
         if not stars__ is None:
             info['stars:raw'] = stars__['alt']
             stars_, full_scale = [x[0] for x in re.finditer('[\d]*[.][\d]+|[\d]+', stars__['alt'])]
@@ -54,18 +58,18 @@ def collection(response):
         else:
             info['stars:raw'] = 0.0
             info['stars:norm'] = 0.0
-        reviews_ = hotel.find("a",{"class":HOTEL_REVIEWS})
+        reviews_ = hotel.find("a",{"class": settings.HOTEL_REVIEWS})
         if not reviews_ is None:
             info['reviews'] = int(re.search('[0-9]+', reviews_.text).group())
             info['views'] = int(re.search('[0-9]+', reviews_.text).group()) * 4
         else:
             info['reviews']=0
             info['views'] = 0
-        name_ = hotel.find("a",{"class":HOTEL_NAME_LINK})
+        name_ = hotel.find("a",{"class": settings.HOTEL_NAME_LINK})
         if not name_ is None:
             info['name'] = name_.text.replace('"','')
 
-        link_ = hotel.find("a",{"class":HOTEL_NAME_LINK})
+        link_ = hotel.find("a",{"class": settings.HOTEL_NAME_LINK})
         if not link_ is None:
             info['url'] = link_['href']
 
@@ -75,6 +79,7 @@ def collection(response):
         infos.append(info)
 
     return infos
+
 
 def details(response):
 
@@ -163,6 +168,7 @@ def details(response):
     try:
         rank_ = response.find("div",{"class":"_1vpp5J_x"}).text.strip()
         rank = ' '.join(filter(None, re.split(' |\n',rank_)))
+
     except Exception as err:
         warnings.append(traceback.format_exc())
         logger.warning(err)
@@ -201,7 +207,6 @@ def details(response):
         sid_tbs.append(traceback.format_exc())
         lon_lat = None
     # import pdb;pdb.set_trace();
-
 
     property_amenities_name=[]
     property_amenities_cat=[]
