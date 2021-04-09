@@ -192,6 +192,23 @@ def details(response):
         info['phone'] = phone
 
     # TODO: Implement here the calculation of other parameters useful for rating
+<<<<<<< HEAD
+=======
+    #try:
+     #   columns = response.find('script', text = re.compile("""typeahead.recentHistoryList"""), attrs = {"type":"text/javascript"})
+    #    r1=re.findall(r"taStore\.store\('typeahead\.recentHistoryList'.*",str(columns))
+    #    r2=r1[0].replace("taStore.store('typeahead.recentHistoryList', ",'')
+     #   r2=r2[:-2]
+     #   ss=json.loads(r2)
+    #    coords=[]
+    #    [coords.append(x['coords']) for x in ss if "https://www.tripadvisor.com"+x['url']==link]
+    #    lon_lat=tuple(map(float,coords[0].split(",")))[::-1]
+    #except Exception as err:
+    #    sid_errors.append(err)
+    #    sid_tbs.append(traceback.format_exc())
+     #   lon_lat = None
+    # import pdb;pdb.set_trace();
+>>>>>>> cc12b723a571152e11b8a1c500ba6203704ce424
 
     property_amenities_name=[]
     property_amenities_cat=[]
