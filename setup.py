@@ -19,5 +19,12 @@ setup(
     author_email='manuele@inventati.org',
     url='https://github.com/manuelep/scrapealong',
     license=license,
-    packages=find_packages(exclude=('tests', 'docs'))
+    packages=find_packages(exclude=('tests', 'docs')),
+    install_requires = [
+        'aiohttp',
+        'bs4',
+        'price-parser',
+        'pyppeteer',
+        'nest_asyncio',
+    ]
 )

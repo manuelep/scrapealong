@@ -78,8 +78,8 @@ def details(response):
 
     try:
         scriptCode = response.find('script', text = re.compile("""typeahead.recentHistoryList"""), attrs = {"type":"text/javascript"})
-        oo = parse_script(scriptCode)
-        lat, lon = map(float, ['coords'].split(','))
+        oo = parse_script(str(scriptCode))
+        lat, lon = map(float, oo['coords'].split(','))
     except Exception as err:
         lon_lat = None
         warnings.append(traceback.format_exc())

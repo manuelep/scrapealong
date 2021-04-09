@@ -16,8 +16,35 @@ def pagination(response):
     pages = response.find('div', attrs={"data-automation": "AppPresentation_PaginationLinksList"}).findAll('a')
     return int(pages[-1].text)
 
-def collection(response):
-    """ """
+def collection(url, response):
+    infos = []
+    for attraction in tqdm(response.findAll('div', {'data-automation': 'AppPresentation_SingleFlexCardSection'})):
+        info = {'amenity': AMENITY}
+
+        allAnchors = attraction.findAll('a')
+
+        info['url'] = allAnchors[0]['href']
+
+        info['sid'] = next(filter(lambda ss: ss.startswith('d') and ss[1:].isdigit(), info['url'].split('-')))[1:]
+
+        title_ = allAnchors[1]
+
+        info['name'] = next(filter(lambda ss: ss.strip() and len(ss)>2, title_.find('h3').findAll(text=True, recursive=True)))
+
+        stars__ = allAnchors[2]
+        stars_ = stars__.find('svg')
+        stars, full_scale = sorted(re.findall(r'[\d]+[.,\d]+|[\d]*[.][\d]+|[\d]+', stars_.attrs['title']), key=float)
+        starsn = Decimal(str(float(stars)/int(full_scale))).quantize(Decimal(str(1/int(full_scale))))
+        info['stars:norm'] = starsn
+        info['stars:raw'] = stars_.attrs['title']
+        info['reviews'] = int(''.join(re.findall('[0-9]+', stars__.find('span').text)))
+
+        infos.append(info)
+    return infos
+
+
+def collection_old(url, response):
+    """ DEPRECATED """
 
     attractions_=response.find(
         "div",

@@ -22,7 +22,7 @@ from .tripadvisor.hotels.scrape import details as hot_details
 from .immobiliare_it.for_sale.scrape import details as sal_details
 
 from .tripadvisor.restaurants.single import Browser as Restaurant
-from .tripadvisor.restaurants.single import Picker as RestPicker
+# from .tripadvisor.restaurants.single import Picker as RestPicker
 from .tripadvisor.restaurants.scrape import AMENITY as RESTAURANT
 
 from .tripadvisor.hotels.single import Browser as Hotel
