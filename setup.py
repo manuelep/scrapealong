@@ -26,5 +26,6 @@ setup(
         'price-parser',
         'pyppeteer',
         'nest_asyncio',
+        'diskcache'
     ]
 )
